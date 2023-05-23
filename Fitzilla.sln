@@ -1,0 +1,45 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33627.172
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fitzilla.API", "Fitzilla.API\Fitzilla.API.csproj", "{84363DC0-B203-4D28-810E-D24EC0C90343}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fitzilla.Data", "Fitzilla.Data\Fitzilla.Data.csproj", "{E0A8D5F4-838B-4447-8956-9DB5AC684CDD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fitzilla.Core", "Fitzilla.Core\Fitzilla.Core.csproj", "{41E9BDE9-CCC7-40E0-BA8A-45764BB0E7F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fitzilla.App", "Fitzilla.App\Fitzilla.App.csproj", "{7CF62F5D-B891-4FB4-8644-AB85A1F61541}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{84363DC0-B203-4D28-810E-D24EC0C90343}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84363DC0-B203-4D28-810E-D24EC0C90343}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84363DC0-B203-4D28-810E-D24EC0C90343}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84363DC0-B203-4D28-810E-D24EC0C90343}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0A8D5F4-838B-4447-8956-9DB5AC684CDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0A8D5F4-838B-4447-8956-9DB5AC684CDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0A8D5F4-838B-4447-8956-9DB5AC684CDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0A8D5F4-838B-4447-8956-9DB5AC684CDD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41E9BDE9-CCC7-40E0-BA8A-45764BB0E7F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41E9BDE9-CCC7-40E0-BA8A-45764BB0E7F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41E9BDE9-CCC7-40E0-BA8A-45764BB0E7F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41E9BDE9-CCC7-40E0-BA8A-45764BB0E7F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CF62F5D-B891-4FB4-8644-AB85A1F61541}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CF62F5D-B891-4FB4-8644-AB85A1F61541}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CF62F5D-B891-4FB4-8644-AB85A1F61541}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{7CF62F5D-B891-4FB4-8644-AB85A1F61541}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CF62F5D-B891-4FB4-8644-AB85A1F61541}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CF62F5D-B891-4FB4-8644-AB85A1F61541}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E3730BFE-9AA5-4384-936E-8AB76B87E6CB}
+	EndGlobalSection
+EndGlobal
