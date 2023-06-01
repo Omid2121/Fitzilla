@@ -11,7 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
+    <ProjectReference Include="..\Fitzilla.Core\Fitzilla.Core.csproj" />
+    <ProjectReference Include="..\Fitzilla.Data\Fitzilla.Data.csproj" />
   </ItemGroup>
 
 </Project>
