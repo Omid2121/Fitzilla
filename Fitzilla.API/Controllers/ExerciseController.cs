@@ -2,7 +2,9 @@
 using Fitzilla.Core.DTOs;
 using Fitzilla.Core.IRepository;
 using Fitzilla.Core.Models;
+using Fitzilla.Core.Services;
 using Fitzilla.Data.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Fitzilla.API.Controllers
@@ -14,39 +16,63 @@ namespace Fitzilla.API.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IAuthManager _authManager;
 
-        public ExerciseController(IUnitOfWork unitOfWork, IMapper mapper)
+        public ExerciseController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _authManager = authManager;
         }
 
+        #region Endpoints allowed for Authorized users(Admin, Consumer).
+
+        [Authorize(Roles = "Admin,Consumer")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GeExercises([FromQuery] RequestParams requestParams)
         {
-            var exercises = await _unitOfWork.Exercises.GetPagedList(requestParams);
+            IEnumerable<Exercise> exercises = await _unitOfWork.Exercises.GetPagedList(requestParams);
+            var currentUser = await _authManager.GetCurrentUser(User);
+            var userRole = await _authManager.GetUserRoleById(currentUser.Id);
+
+            if (userRole != "Admin")
+            {
+                exercises = exercises.Where(e => e.CreatorId == currentUser.Id);
+            }
             var result = _mapper.Map<IList<ExerciseDTO>>(exercises);
+
             return Ok(result);
         }
 
-        [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Consumer")]
+        [HttpGet("{id}", Name = "GetExercise")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetExercise(string id)
+        public async Task<IActionResult> GetExercise(Guid id)
         {
-            //TODO: Both ExerciseType and Workout should be included, instead of just ExerciseType.
-            var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(id), new List<string> { "ExerciseType" });
-            var result = _mapper.Map<ExerciseDTO>(exercise);
+            if (id == Guid.Empty) return BadRequest();
+
+            var exerciseType = await _unitOfWork.Exercises.Get(e => e.Id.Equals(id), new List<string> { "ExerciseType", "Workout" });
+
+            if (!await IsAuthorized(exerciseType.CreatorId)) return Forbid();
+
+            var result = _mapper.Map<ExerciseDTO>(exerciseType);
+            
             return Ok(result);
         }
 
+        [Authorize(Roles = "Admin,Consumer")]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         public async Task<IActionResult> CreateExercise([FromBody] CreateExerciseDTO exerciseDTO)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
-            if (_unitOfWork.ExerciseTypes.Get(x => x.Id.Equals(exerciseDTO.ExerciseTypeId)).Result is null) 
+
+            if (!await ExerciseTypeExists(exerciseDTO.ExerciseTypeId))
                 return BadRequest("Submitted data is invalid.");
+
+            var currentUser = await _authManager.GetCurrentUser(User);
+            if (exerciseDTO.CreatorId != currentUser.Id) return BadRequest("Ids doesn't match");
 
             var exercise = _mapper.Map<Exercise>(exerciseDTO);
             await _unitOfWork.Exercises.Insert(exercise);
@@ -57,12 +83,14 @@ namespace Fitzilla.API.Controllers
 
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdateExercise(string id, [FromBody] UpdateExerciseDTO exerciseDTO)
+        public async Task<IActionResult> UpdateExercise(Guid id, [FromBody] UpdateExerciseDTO exerciseDTO)
         {
-            if (!ModelState.IsValid || string.IsNullOrEmpty(id)) return BadRequest(ModelState);
+            if (!ModelState.IsValid || id == Guid.Empty) return BadRequest(ModelState);
 
             var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(id));
             if (exercise == null) return BadRequest("Submitted data is invalid.");
+
+            if (!await IsAuthorized(exercise.CreatorId)) return Forbid(); 
 
             _mapper.Map(exerciseDTO, exercise);
             _unitOfWork.Exercises.Update(exercise);
@@ -71,14 +99,17 @@ namespace Fitzilla.API.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin,Consumer")]
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeleteExercise(string id)
+        public async Task<IActionResult> DeleteExercise(Guid id)
         {
-            if (string.IsNullOrEmpty(id)) return BadRequest();
+            if (id == Guid.Empty) return BadRequest();
 
             var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(id));   
             if (exercise == null) return BadRequest("Submitted data is invalid.");
+
+            if (!await IsAuthorized(exercise.CreatorId)) return Forbid();
 
             await _unitOfWork.Exercises.Delete(id);
             await _unitOfWork.Save();
@@ -86,11 +117,42 @@ namespace Fitzilla.API.Controllers
             return NoContent();
         }
 
-        //[Route("ExerciseTypes/search")]
-        //[HttpGet]
-        //public IActionResult Search(string searchValue)
-        //{
-        //    if (string.IsNullOrEmpty(searchValue)) return BadRequest();
-        //}
+        [Authorize(Roles = "Admin,Consumer")]
+        [HttpGet("search")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> Search([FromQuery] string searchRequest)
+        {
+            if (string.IsNullOrEmpty(searchRequest)) 
+                return BadRequest("Submitted data is invalid.");
+
+            var currentUser = await _authManager.GetCurrentUser(User);
+            var userRole = await _authManager.GetUserRoleById(currentUser.Id);
+
+            IEnumerable<Exercise> exercises = await _unitOfWork.Exercises.Search(exercise =>
+            exercise.ExerciseType.Name.ToLower().Contains(searchRequest.ToLower()), new List<string> { "ExerciseType" });
+
+            if (userRole != "Admin")
+            {
+                exercises = exercises.Where(exercise => exercise.CreatorId == currentUser.Id);
+            }
+            var result = _mapper.Map<IList<ExerciseDTO>>(exercises);
+
+            return Ok(result);
+        }
+
+        private async Task<bool> ExerciseTypeExists(Guid? id)
+        {
+            return await _unitOfWork.ExerciseTypes.Get(e => e.Id.Equals(id)) != null;
+        }
+
+        private async Task<bool> IsAuthorized(string exerciseUserId)
+        {
+            var currentUser = await _authManager.GetCurrentUser(User);
+            var userRole = await _authManager.GetUserRoleById(currentUser.Id);
+
+            return exerciseUserId == currentUser.Id || (userRole == "Admin");
+        }
+
+        #endregion
     }
 }

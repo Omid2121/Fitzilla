@@ -14,13 +14,13 @@ namespace Fitzilla.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public class WorkoutController : ControllerBase
+    public class MacroController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IAuthManager _authManager;
 
-        public WorkoutController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager)
+        public MacroController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
@@ -32,121 +32,121 @@ namespace Fitzilla.API.Controllers
         [Authorize(Roles = "Admin,Consumer")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetWorkouts([FromQuery] RequestParams requestParams)
+        public async Task<IActionResult> GetMacros(RequestParams requestParams)
         {
-            IEnumerable<Workout> workouts = await _unitOfWork.Workouts.GetPagedList(requestParams);
+            IEnumerable<Macro> macros = await _unitOfWork.Macros.GetPagedList(requestParams);
             var currentUser = await _authManager.GetCurrentUser(User);
             var userRole = await _authManager.GetUserRoleById(currentUser.Id);
 
             if (userRole != "Admin")
             {
-                workouts = workouts.Where(w => w.CreatorId == currentUser.Id);
+                macros = macros.Where(m => m.CreatorId == currentUser.Id);
             }
-            var result = _mapper.Map<IList<WorkoutDTO>>(workouts);
+            var result = _mapper.Map<IList<MacroDTO>>(macros);
 
             return Ok(result);
         }
 
         [Authorize(Roles = "Admin,Consumer")]
-        [HttpGet("{id}", Name = "GetWorkout")]
+        [HttpGet("{id}", Name = "GetMacro")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetWorkout(Guid id)
+        public async Task<IActionResult> GetMacro(Guid id)
         {
             if (id == Guid.Empty) return BadRequest();
 
-            var workout = await _unitOfWork.Workouts.Get(w => w.Id.Equals(id), new List<string> { "Exercises" });
+            var macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(id));
 
-            if (!await IsAuthorized(workout.CreatorId)) return Forbid();
+            if (!await IsAuthorized(macro.CreatorId)) return Forbid();
 
-            var result = _mapper.Map<WorkoutDTO>(workout);
+            var result = _mapper.Map<MacroDTO>(macro);
+
             return Ok(result);
         }
 
         [Authorize(Roles = "Admin,Consumer")]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
-        public async Task<IActionResult> CreateWorkout([FromBody] CreateWorkoutDTO workoutDTO)
+        public async Task<IActionResult> CreateMacro([FromBody] CreateMacroDTO macroDTO)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
             var currentUser = await _authManager.GetCurrentUser(User);
-            if (workoutDTO.CreatorId != currentUser.Id) return BadRequest("Ids doesn't match");
+            if (macroDTO.CreatorId != currentUser.Id) return BadRequest("Ids doesn't match");
 
-            var workout = _mapper.Map<Workout>(workoutDTO);
-            await _unitOfWork.Workouts.Insert(workout);
+            var macro = _mapper.Map<Macro>(macroDTO);
+            await _unitOfWork.Macros.Insert(macro);
             await _unitOfWork.Save();
 
-            return CreatedAtRoute("GetWorkout", new { id = workout.Id }, workout);
+            return CreatedAtRoute("GetMacro", new { id = macro.Id }, macro);
         }
 
         [Authorize(Roles = "Admin,Consumer")]
         [HttpPut("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdateWorkout(Guid id, [FromBody] UpdateWorkoutDTO workoutDTO)
+        public async Task<IActionResult> UpdateMacro(Guid id, [FromBody] UpdateMacroDTO macroDTO)
         {
             if (!ModelState.IsValid || id == Guid.Empty) return BadRequest(ModelState);
 
-            var workout = await _unitOfWork.Workouts.Get(w => w.Id.Equals(id));
-            if (workout == null) return BadRequest("Submitted data is invalid.");
+            var macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(id));
+            if (macro is null) return BadRequest("Submitted data is invalid.");
 
-            if (!await IsAuthorized(workout.CreatorId)) return Forbid();
+            if (!await IsAuthorized(macro.CreatorId)) return Forbid();
 
-            _mapper.Map(workoutDTO, workout);
-            _unitOfWork.Workouts.Update(workout);
+            _mapper.Map(macroDTO, macro);
+            _unitOfWork.Macros.Update(macro);
             await _unitOfWork.Save();
-
             return NoContent();
         }
 
         [Authorize(Roles = "Admin,Consumer")]
         [HttpDelete("{id}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeleteWorkout(Guid id)
+        public async Task<IActionResult> DeleteMacro(Guid id)
         {
             if (id == Guid.Empty) return BadRequest();
 
-            var workout = await _unitOfWork.Workouts.Get(w => w.Id.Equals(id));
-            if (workout == null) return BadRequest("Submitted data is invalid.");
+            var macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(id));
+            if (macro is null) return BadRequest("Submitted data is invalid.");
 
-            if (!await IsAuthorized(workout.CreatorId)) return Forbid();
+            if (!await IsAuthorized(macro.CreatorId)) return Forbid();
 
-            await _unitOfWork.Workouts.Delete(id);
+            await _unitOfWork.Macros.Delete(id);
             await _unitOfWork.Save();
-
             return NoContent();
         }
 
         [Authorize(Roles = "Admin,Consumer")]
         [HttpGet("search")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> Search([FromQuery] string searchRequest, string userId)
+        public async Task<IActionResult> Search([FromQuery] string searchRequest)
         {
-            if (string.IsNullOrEmpty(searchRequest) || string.IsNullOrEmpty(userId))
-                return BadRequest("Submitted data is invalid.");
+            if (string.IsNullOrEmpty(searchRequest)) return BadRequest("Submitted data is invalid.");
 
             var currentUser = await _authManager.GetCurrentUser(User);
             var userRole = await _authManager.GetUserRoleById(currentUser.Id);
 
-            IEnumerable<Workout>workouts = await _unitOfWork.Workouts
-                .Search(workout => workout.Name.ToLower()
+            IEnumerable<Macro> macros = await _unitOfWork.Macros
+                .Search(macro => macro.Name.ToLower()
                 .Contains(searchRequest.ToLower()));
 
             if (userRole != "Admin")
             {
-                workouts = workouts.Where(w => w.CreatorId == currentUser.Id);
+                macros = macros.Where(m => m.CreatorId == currentUser.Id);
             }
-            var result = _mapper.Map<IList<WorkoutDTO>>(workouts);
+
+            var result = _mapper.Map<IList<MacroDTO>>(macros);
 
             return Ok(result);
         }
 
-        private async Task<bool> IsAuthorized(string workoutUserId)
+        private async Task<bool> IsAuthorized(string macroUserId)
         {
             var currentUser = await _authManager.GetCurrentUser(User);
             var userRole = await _authManager.GetUserRoleById(currentUser.Id);
 
-            return workoutUserId == currentUser.Id || (userRole == "Admin");
+            return macroUserId == currentUser.Id || (userRole == "Admin");
         }
+
         #endregion
     }
 }

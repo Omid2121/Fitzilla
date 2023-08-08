@@ -10,31 +10,33 @@ namespace Fitzilla.Core.DTOs
 {
     public class CreateExerciseTypeDTO
     {
-        ///<summary>
-        /// ExerciseType's name
-        /// </summary>
         [Required]
         public string Name { get; set; }
 
-        ///<summary>
-        /// ExerciseType's image
-        /// </summary>
+        [Required]
+        public string Description { get; set; }
+
         public string Icon { get; set; }
 
-        ///<summary>
-        /// Exercise's Checkbox's value
-        /// </summary>
-        [NotMapped]
+        public DateTimeOffset CreationTime { get; set; }
+
+        //TODO: This bool should not effect the database.
         public bool IsChecked { get; set; }
+
+        public string CreatorId { get; set; }
     }
 
     public class ExerciseTypeDTO : CreateExerciseTypeDTO
     {
         public Guid Id { get; set; }
 
+        public UserDTO Creator { get; set; }
+
         public virtual IList<ExerciseDTO> Exercises { get; set; }
     }
 
     public class UpdateExerciseTypeDTO : CreateExerciseTypeDTO
-    { }
+    {
+        public DateTimeOffset? LastModifiedTime { get; set; }
+    }
 }

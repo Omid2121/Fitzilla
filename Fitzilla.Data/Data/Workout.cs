@@ -22,24 +22,26 @@ namespace Fitzilla.Data.Data
         /// </summary>
         public string Description { get; set; }
 
-        ///<summary>
-        /// Workout's foreignKey
-        /// </summary>
-        [ForeignKey(nameof(User))]
-        public string UserId { get; set; }
-
-        /// <summary>
-        /// Related User instance.
-        /// </summary>
-        public User User { get; set; }
-
-
         /// <summary>
         /// Workout's targeted group muscle.
         /// </summary>
-        public TargetMuscle TargetMuscle { get; set; }
+        public TargetedMuscle TargetMuscle { get; set; }
 
-        [InverseProperty("Workout")]
-        public virtual ICollection<Exercise> Exercises { get; set; } = new List<Exercise>();
+
+        /// <summary>
+        /// Workout's creation time.
+        /// </summary>
+        public DateTimeOffset CreationTime { get; set; }
+
+        /// <summary>
+        /// Workout's last modified time.
+        /// </summary>
+        public DateTimeOffset? LastModifiedTime { get; set; }
+
+        [ForeignKey(nameof(Creator))]
+        public string CreatorId { get; set; }
+        public User Creator { get; set; }
+
+        public virtual ICollection<Exercise> Exercises { get; set; }
     }
 }

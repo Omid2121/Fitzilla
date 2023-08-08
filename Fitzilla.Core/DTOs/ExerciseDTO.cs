@@ -11,33 +11,32 @@ namespace Fitzilla.Core.DTOs
 {
     public class CreateExerciseDTO
     {
-        /// <summary>
-        /// Weight amount for exercise.
-        /// </summary>
         [Required]
         public double Weight { get; set; }
 
-        ///<summary>
-        /// Exercise's set
-        /// </summary>
         [Required]
         public int Set { get; set; }
 
-        ///<summary>
-        /// Exercise's repetition
-        /// </summary>
         [Required]
         public int Rep { get; set; }
 
-        [Required]
-        public string ExerciseTypeId { get; set; }
+        public DateTimeOffset CreationTime { get; set; }
 
-        public string WorkoutId { get; set; }
+        [Required]
+        public Guid? ExerciseTypeId { get; set; }
+
+        public Guid? WorkoutId { get; set; }
+
+        public string CreatorId { get; set; }
     }
 
     public class ExerciseDTO : CreateExerciseDTO
     {
         public Guid Id { get; set; }
+
+        public DateTimeOffset? LastModifiedTime { get; set; }
+
+        public UserDTO Creator { get; set; }
 
         public ExerciseTypeDTO ExerciseType { get; set; }
 
@@ -45,5 +44,7 @@ namespace Fitzilla.Core.DTOs
     }
 
     public class UpdateExerciseDTO : CreateExerciseDTO
-    {}
+    {
+        public DateTimeOffset? LastModifiedTime { get; set; }
+    }
 }

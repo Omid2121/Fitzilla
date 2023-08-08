@@ -25,7 +25,13 @@ namespace Fitzilla.Core.Configurations
             CreateMap<Workout, CreateWorkoutDTO>().ReverseMap();
             CreateMap<Workout, UpdateWorkoutDTO>().ReverseMap();
 
-            CreateMap<User , UserDTO>().ReverseMap();
+            CreateMap<Macro, MacroDTO>().ReverseMap();
+            CreateMap<Macro, CreateMacroDTO>().ReverseMap();
+            CreateMap<Macro, UpdateMacroDTO>().ReverseMap();
+
+            CreateMap<User, UserDTO>().ReverseMap();
+            CreateMap<User, CreateUserDTO>().ReverseMap();
+            CreateMap<User, UpdateUserDTO>().ReverseMap();
         }
     }
 }

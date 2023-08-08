@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Fitzilla.Data.Enums;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -45,16 +46,14 @@ namespace Fitzilla.Data.Data
         public double Height { get; set; }
 
         /// <summary>
-        /// Units of measurement(cm, inches, kg, lbs)
+        /// Units of measurement(Metric or Imperial)
         /// </summary>
-        public string? Measurement { get; set; }
-
-        [ForeignKey(nameof(Macro))]
-        public string MacroId { get; set; }
-        public Macro Macro { get; set; }
+        public Measurement Measurement { get; set; }
 
 
-        [InverseProperty("User")]
-        public virtual ICollection<Workout> Workouts { get; set; } = new List<Workout>();
+        public virtual ICollection<ExerciseType> ExerciseTypes { get; set; }
+        public virtual ICollection<Exercise> Exercises { get; set; }
+        public virtual ICollection<Macro> Macros { get; set; }
+        public virtual ICollection<Workout> Workouts { get; set; }
     }
 }

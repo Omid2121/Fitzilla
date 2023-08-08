@@ -26,16 +26,28 @@ namespace Fitzilla.Data.Data
         /// </summary>
         public int Rep { get; set; }
 
+        /// <summary>
+        /// Exercise's creation time.
+        /// </summary>
+        public DateTimeOffset CreationTime { get; set; }
+
+        /// <summary>
+        /// Exercise's last modified time.
+        /// </summary>
+        public DateTimeOffset? LastModifiedTime { get; set; }
+
+        [ForeignKey(nameof(Creator))]
+        public string CreatorId { get; set; }
+        public User Creator { get; set; }
+
 
         [ForeignKey(nameof(ExerciseType))]
-        public string ExerciseTypeId { get; set; }
-
+        public Guid ExerciseTypeId { get; set; }
         public ExerciseType ExerciseType { get; set; }
 
 
         [ForeignKey(nameof(Workout))]
-        public string WorkoutId { get; set; }
-
-        public Workout Workout { get; set; }
+        public Guid? WorkoutId { get; set; }
+        public Workout? Workout { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Fitzilla.Data.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -19,12 +20,12 @@ namespace Fitzilla.Data.Data
         /// <summary>
         /// Calorie Maintenance, Calorie Surplus, Calorie Deficit
         /// </summary>
-        public string ConsumeType { get; set; }
+        public ConsumeType ConsumeType { get; set; }
 
         /// <summary>
         /// Sedentary, Moderately active, Very active
         /// </summary>
-        public string Intensity { get; set; }
+        public Intensity Intensity { get; set; }
 
         /// <summary>
         /// Amount of calories
@@ -46,8 +47,18 @@ namespace Fitzilla.Data.Data
         /// </summary>
         public double Fat { get; set; }
 
-        [ForeignKey(nameof(User))]
-        public string UserId { get; set; }
-        public User User { get; set; }
+        /// <summary>
+        /// Macro's creation time.
+        /// </summary>
+        public DateTimeOffset CreationTime { get; set; }
+
+        /// <summary>
+        /// Macro's last modified time.
+        /// </summary>
+        public DateTimeOffset? LastModifiedTime { get; set; }
+
+        [ForeignKey(nameof(Creator))]
+        public string CreatorId { get; set; }
+        public User Creator { get; set; }
     }
 }

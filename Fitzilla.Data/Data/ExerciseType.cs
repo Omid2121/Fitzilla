@@ -26,13 +26,20 @@ namespace Fitzilla.Data.Data
         /// </summary>
         public string Icon { get; set; }
 
-        ///<summary>
-        /// Exercise's Checkbox's value
+        /// <summary>
+        /// ExerciseType's creation time.
         /// </summary>
-        [NotMapped]
-        public bool IsChecked { get; set; }
+        public DateTimeOffset CreationTime { get; set; }
 
-        [InverseProperty("ExerciseType")]
+        /// <summary>
+        /// ExerciseType's last modified time.
+        /// </summary>
+        public DateTimeOffset? LastModifiedTime { get; set; }
+
+        [ForeignKey(nameof(Creator))]
+        public string? CreatorId { get; set; }
+        public User? Creator { get; set; }
+
         public virtual ICollection<Exercise> Exercises { get; set; }
     }
 }

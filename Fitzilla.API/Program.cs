@@ -4,6 +4,7 @@ using Fitzilla.Core.IRepository;
 using Fitzilla.Core.Repository;
 using Fitzilla.Core.Services;
 using Fitzilla.Data.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -23,8 +24,10 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.ConfigureHttpCacheHeaders();
 
 builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
 builder.Services.ConfigureIdentity();
 builder.Services.ConfigureJWT(builder.Configuration);
+
 
 builder.Services.AddCors(options => 
 {
@@ -45,13 +48,13 @@ AddSwaggerDoc(builder.Services);
 
 // Add services to the container.
 
-builder.Services.AddControllers(config =>
+builder.Services.AddControllers(/*config =>
 {
     config.CacheProfiles.Add("120SecondsDuration", new CacheProfile
     {
         Duration = 120
     });
-}).AddNewtonsoftJson(option =>
+}*/).AddNewtonsoftJson(option =>
     option.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore);
 
 
@@ -63,7 +66,9 @@ void AddSwaggerDoc(IServiceCollection services)
     {
         c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
-            Description = "@JWT Authorization header using the bearer scheme.",
+            Description = @"JWT Authorization header using the Bearer scheme. 
+                      Enter 'Bearer' [space] and then your token in the text input below.
+                      Example: 'Bearer 12345abcdef'",
             Name = "Authorization",
             In = ParameterLocation.Header,
             Type = SecuritySchemeType.ApiKey,
@@ -102,18 +107,16 @@ if (app.Environment.IsDevelopment())
 app.ConfigureExeptionHandler();
 
 app.UseCors("AllowEverything");
+app.UseRouting();
 
 app.UseResponseCaching();
 app.UseHttpCacheHeaders();
 app.UseIpRateLimiting();
 
-app.UseRouting();
-
-app.UseAuthentication();
-app.UseAuthorization();
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

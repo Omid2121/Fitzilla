@@ -23,7 +23,8 @@ namespace Fitzilla.Core
             {
                 q.User.RequireUniqueEmail = true;
             });
-
+            builder = new IdentityBuilder(builder.UserType, typeof(IdentityRole), services);
+            builder.AddTokenProvider("FitzillaApi", typeof(DataProtectorTokenProvider<User>));
             builder.AddEntityFrameworkStores<DatabaseContext>().AddDefaultTokenProviders();
         }
 
@@ -46,9 +47,11 @@ namespace Fitzilla.Core
             {
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
-                    ValidateIssuer = true, // the server that created the token
-                    ValidateLifetime = true, // the token is valid for a certain amount of time
-                    ValidateIssuerSigningKey = true, // the server that created the signing key is trusted
+                    ValidateIssuer = true,              // the server that created the token
+                    ValidateLifetime = true,            // the token is valid for a certain amount of time
+                    ValidateAudience = true,            // the recipient of the token is authorized to receive it
+                    ValidateIssuerSigningKey = true,    // the server that created the signing key is trusted
+                    ValidAudience = jwtSettings.GetSection("Audience").Value,
                     ValidIssuer = jwtSettings.GetSection("Issuer").Value,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
                 };
@@ -82,8 +85,8 @@ namespace Fitzilla.Core
             services.AddHttpCacheHeaders(
                 (expirationOpt) =>
                 {
-                    expirationOpt.MaxAge = 120;
-                    expirationOpt.CacheLocation = CacheLocation.Private;
+                    expirationOpt.MaxAge = 1200;
+                    expirationOpt.CacheLocation = CacheLocation.Public;
                 },
                 (validationOpt) =>
                 {
@@ -110,6 +113,7 @@ namespace Fitzilla.Core
             services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
             services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
             services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+            services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
         }
     }
 }
