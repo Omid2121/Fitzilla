@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Fitzilla.App.Views.Profile.AboutPage"
+             xmlns:viewmodels="clr-namespace:Fitzilla.App.ViewModels.Profile"
+             xmlns:DTO="clr-namespace:Fitzilla.Core.DTOs;assembly=Fitzilla.Core"
+             x:DataType="viewmodels:ProfileViewModel"
+             Title="AboutPage">
+
+    <ContentPage.Resources>
+        <Style TargetType="Label">
+            <Setter Property="FontFamily"
+                    Value="Rubik-Regular" />
+            <Setter Property="TextColor"
+                    Value="Black" />
+        </Style>
+        <Style TargetType="Entry">
+            <Setter Property="FontFamily" 
+                    Value="Rubik-Regular"/>
+            <Setter Property="TextColor"
+                    Value="Black" />
+        </Style>
+    </ContentPage.Resources>
+
+    <VerticalStackLayout>
+        <Frame>
+            <Grid>
+                <Label Text="About"
+                    HorizontalOptions="Start"
+                    TextColor="Black"
+                        FontSize="Large"/>
+            </Grid>
+        </Frame>
+        <ScrollView Margin="10,0,10,0">
+            <StackLayout>
+                <StackLayout x:DataType="DTO:UserDTO">
+                    <Label Text="First name"/>
+                    <Entry Text="{Binding FirstName}"/>
+                    <Label Text="Last name"/>
+                    <Entry Text="{Binding LastName}"/>
+                    <Label Text="Gender"/>
+                    <Entry Text="{Binding Gender}"/>
+                    <Label Text="Birthdate" />
+                    <DatePicker x:Name="startDatePicker" Format="D" Date="{Binding Birth}" />
+                    <Label Text="Height" />
+                    <Entry Keyboard="Numeric"
+                            Text="{Binding Height}" />
+                    <Label Text="Weight" />
+                    <Entry Keyboard="Numeric"
+                            Text="{Binding Weight}" />
+                    <Label Text="Phone number" />
+                    <Entry Keyboard="Telephone"
+                            Text="{Binding PhoneNumber}" />
+                </StackLayout>
+                <Button Text="Save" Margin="0,10,0,0"
+                    TextColor="White"
+                    BackgroundColor="#3346D3"
+                    VerticalOptions="End"
+                        Command="{Binding SaveAboutCommand}"/>
+                <Button Text="Back"
+                    TextColor="White"
+                        BackgroundColor="#3346D3"
+                        VerticalOptions="End"
+                        Command="{Binding PreviousCommand}"/>
+            </StackLayout>
+        </ScrollView>
+
+    </VerticalStackLayout>
+</ContentPage>

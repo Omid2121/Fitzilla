@@ -2,11 +2,173 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Fitzilla.App.Views.Macro.MacroPage"
+             xmlns:viewmodels="clr-namespace:Fitzilla.App.ViewModels.Macro;assembly=Fitzilla.App"
+             x:DataType="viewmodels:MacroViewModel"
              Title="MacroPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
+
+    <ContentPage.Resources>
+        <Style TargetType="Label">
+            <Setter Property="FontFamily"
+                    Value="Rubik-Regular" />
+            <Setter Property="TextColor"
+                    Value="Gray" />
+            <Setter Property="HorizontalOptions"
+                    Value="Start" />
+            <Setter Property="VerticalOptions"
+                    Value="End" />
+            <Setter Property="FontSize"
+                    Value="Subtitle" />
+            <Setter Property="Grid.ColumnSpan"
+                    Value="5" />
+
+        </Style>
+        <Style TargetType="Editor">
+            <Setter Property="FontFamily"
+                    Value="Rubik-Regular" />
+            <Setter Property="HorizontalOptions"
+                    Value="End" />
+            <Setter Property="VerticalOptions"
+                    Value="End" />
+            <Setter Property="FontSize"
+                    Value="Subtitle" />
+            <Setter Property="Grid.ColumnSpan"
+                    Value="5" />
+            <Setter Property="MaxLength"
+                    Value="2" />
+            <Setter Property="WidthRequest"
+                    Value="30" />
+            <Setter Property="Placeholder"
+                    Value="  %" />
+        </Style>
+        <Style TargetType="Picker">
+            <Setter Property="FontFamily"
+                    Value="Rubik-Regular" />
+            <Setter Property="FontSize"
+                    Value="Subtitle" />
+            <Setter Property="TextColor" Value="Gray" />
+        </Style>
+    </ContentPage.Resources>
+
+    <VerticalStackLayout Padding="0"
+                     BackgroundColor="#F3F4F8">
+
+        <Grid HeightRequest="200"
+                  MinimumHeightRequest="200" >
+            <Grid RowSpacing="0">
+                <Frame >
+                    <Frame.Background>
+                        <LinearGradientBrush StartPoint="1,0"
+                                                 EndPoint="1,0">
+                            <GradientStop Color="#4D5EE0"
+                                              Offset="0.1" />
+                            <GradientStop Color="#262A48"
+                                              Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Frame.Background>
+
+                    <StackLayout>
+
+                        <Button Text="Save"
+                                    TextColor="#4458EC"
+                                    BackgroundColor="Transparent"
+                                    HeightRequest="40"
+                                    WidthRequest="90"
+                                    FontFamily="Rubik-Medium"
+                                    HorizontalOptions="End"
+                                    FontSize="16"/>
+                        <Label Text="Add Macros"
+                                   TextColor="White"
+                                   FontSize="Title"
+                                   FontFamily="Rubik-Medium" />
+                        <Label Text="Macro Creation"
+                                    TextColor="LightGray"
+                                    FontFamily="Rubik-Light"
+                                    FontSize="Small"
+                                    Margin="0,0,0,10" />
+
+                    </StackLayout>
+                </Frame>
+            </Grid>
+        </Grid>
+
+        <ScrollView>
+            <StackLayout>
+                <Grid Padding="10"
+                          RowDefinitions="Auto, *"
+                          ColumnDefinitions="Auto, *">
+                    <Frame Grid.Column="1"
+                               VerticalOptions="StartAndExpand">
+                        <Grid>
+                            <Image Source="kcal_icon.png"
+                                       Aspect="AspectFit"
+                                       HeightRequest="45"
+                                       WidthRequest="45"
+                                       Grid.Column="0"
+                                       HorizontalOptions="Start"
+                                       VerticalOptions="Start" />
+
+                            <Picker Title="Select a Calorie Consume "
+                                        SelectedItem="{Binding SelectedCalorieConsume}"
+                                        ItemsSource="{Binding CalorieConsume}"
+                                        ItemDisplayBinding="{Binding .}"
+                                        Grid.Row="0"
+                                        Grid.ColumnSpan="4"
+                                        HorizontalOptions="StartAndExpand"
+                                        Grid.Column="1"
+                                        FontSize="Medium"
+                                        TitleColor="Black"
+                                        TextColor="Black" />
+
+                            <Label Text="Calories"
+                                       Margin="0,20,0,0"
+                                       Grid.Column="0"
+                                       Grid.Row="1"
+                                       VerticalOptions="Center" />
+                            <Label Text="{Binding Calories}"
+                                       Margin="0,20,0,0"
+                                       FontSize="Large"
+                                       TextColor="Black"
+                                       Grid.Row="1"
+                                       HorizontalOptions="End" />
+
+                            <Picker Title="Select a Activity"
+                                        SelectedItem="{Binding SelectedActivity}"
+                                        ItemsSource="{Binding Intencity}"
+                                        ItemDisplayBinding="{Binding .}"
+                                        Grid.Row="2"
+                                        Grid.ColumnSpan="3"
+                                        HorizontalOptions="StartAndExpand"
+                                        Grid.Column="0" />
+
+
+                            <Label Text="Carbohydrate"
+                                       Grid.Column="0"
+                                       Grid.Row="3" />
+                            <Editor Grid.Column="0"
+                                        Grid.Row="3"
+                                        Keyboard="Numeric" />
+
+                            <Label Text="Protein"
+                                       Grid.Column="0"
+                                       Grid.Row="4" />
+                            <Editor Grid.Column="0"
+                                        Grid.Row="4"
+                                        Keyboard="Numeric" />
+
+                            <Label Text="Fat"
+                                       Grid.Column="0"
+                                       Grid.Row="5" />
+                            <Editor Grid.Column="0"
+                                        Grid.Row="5"
+                                        Keyboard="Numeric" />
+
+                        </Grid>
+                    </Frame>
+                </Grid>
+
+            </StackLayout>
+        </ScrollView>
+
     </VerticalStackLayout>
+
 </ContentPage>

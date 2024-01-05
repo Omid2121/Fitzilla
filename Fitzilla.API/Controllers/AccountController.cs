@@ -1,8 +1,9 @@
 ﻿using AutoMapper;
-using Fitzilla.Core.DTOs;
-using Fitzilla.Core.Models;
-using Fitzilla.Core.Services;
-using Fitzilla.Data.Data;
+using Fitzilla.BLL.Services;
+using Fitzilla.DAL.DTOs;
+using Fitzilla.DAL.Models;
+using Fitzilla.Models.Data;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.JsonPatch;
@@ -60,17 +61,28 @@ namespace Fitzilla.API.Controllers
 
             if (!await _authManager.ValidateUser(userDTO)) return Unauthorized();
 
-            return Accepted(new TokenRequest
+            return Accepted(new AuthResponse
             {
                 Token = await _authManager.CreateToken(),
                 RefreshToken = await _authManager.CreateRefreshToken()
             });
         }
 
+        //TODO: Make sure it works
+        [Authorize(Roles = "Admin, Customer")]
+        [HttpPost("logout")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync("YourAuthenticationScheme");
+            return Ok();
+        }
+
+
         [HttpPost]
         [Route("refreshtoken")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> RefreshToken([FromBody] TokenRequest tokenRequest)
+        public async Task<IActionResult> RefreshToken([FromBody] AuthResponse tokenRequest)
         {
             var tokenRequestResult = await _authManager.VerifyRefreshToken(tokenRequest);
 

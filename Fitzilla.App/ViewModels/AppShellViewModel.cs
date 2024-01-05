@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Fitzilla.App.ViewModels
 {
-    public partial class AppShellViewModel : BaseViewModel<object>
+    public partial class AppShellViewModel : BaseViewModel
     {
         [ICommand]
         async void SignOut()

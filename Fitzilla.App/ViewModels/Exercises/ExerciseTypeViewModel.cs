@@ -16,10 +16,10 @@ namespace Fitzilla.App.ViewModels.Exercises
     public partial class ExerciseTypeViewModel : BaseViewModel
     {
         [ObservableProperty]
-        private ExerciseTypeDTO _exerciseType;
+        private ExerciseTemplateDTO _exerciseType;
 
         [ObservableProperty]
-        private ObservableCollection<ExerciseTypeDTO> _exerciseTypes;
+        private ObservableCollection<ExerciseTemplateDTO> _exerciseTypes;
 
         private readonly ExerciseTypeService _exerciseTypeService;
 
@@ -33,7 +33,7 @@ namespace Fitzilla.App.ViewModels.Exercises
         {
             try
             {
-                ExerciseTypes = (ObservableCollection<ExerciseTypeDTO>)await _exerciseTypeService.GetItemsAsync();
+                ExerciseTypes = (ObservableCollection<ExerciseTemplateDTO>)await _exerciseTypeService.GetItemsAsync();
             }
             finally
             {
@@ -55,7 +55,7 @@ namespace Fitzilla.App.ViewModels.Exercises
         }
 
         [ICommand]
-        public async void UpdateExerciseType(ExerciseTypeDTO exerciseTypeDTO)
+        public async void UpdateExerciseType(ExerciseTemplateDTO exerciseTypeDTO)
         {
             if (!string.IsNullOrEmpty(exerciseTypeDTO.Id.ToString()))
             {

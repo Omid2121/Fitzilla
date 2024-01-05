@@ -1,13 +1,9 @@
-﻿using Fitzilla.Data.Data;
+﻿using Fitzilla.DAL.Configurations.SeedData;
+using Fitzilla.Models.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Fitzilla.Data.Configurations.Entities
+namespace Fitzilla.DAL.Configurations.Entities
 {
     public class MacroConfiguration : IEntityTypeConfiguration<Macro>
     {
@@ -22,6 +18,8 @@ namespace Fitzilla.Data.Configurations.Entities
             builder.HasOne(macro => macro.Creator)
                 .WithMany(user => user.Macros)
                 .HasForeignKey(macro => macro.CreatorId);
+
+            builder.HasData(MacroSeedData.Macros());
         }
     }
 }

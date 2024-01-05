@@ -1,13 +1,8 @@
 ﻿using AutoMapper;
-using Fitzilla.Core.DTOs;
-using Fitzilla.Data.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Fitzilla.DAL.DTOs;
+using Fitzilla.Models.Data;
 
-namespace Fitzilla.Core.Configurations
+namespace Fitzilla.BLL.Configurations
 {
     public class MapperInitilizer : Profile
     {
@@ -17,9 +12,9 @@ namespace Fitzilla.Core.Configurations
             CreateMap<Exercise, CreateExerciseDTO>().ReverseMap();
             CreateMap<Exercise, UpdateExerciseDTO>().ReverseMap();
 
-            CreateMap<ExerciseType, ExerciseTypeDTO>().ReverseMap();
-            CreateMap<ExerciseType, CreateExerciseTypeDTO>().ReverseMap();
-            CreateMap<ExerciseType, UpdateExerciseTypeDTO>().ReverseMap();
+            CreateMap<ExerciseTemplate, ExerciseTemplateDTO>().ReverseMap();
+            CreateMap<ExerciseTemplate, CreateExerciseTemplateDTO>().ReverseMap();
+            CreateMap<ExerciseTemplate, UpdateExerciseTemplateDTO>().ReverseMap();
 
             CreateMap<Workout, WorkoutDTO>().ReverseMap();
             CreateMap<Workout, CreateWorkoutDTO>().ReverseMap();

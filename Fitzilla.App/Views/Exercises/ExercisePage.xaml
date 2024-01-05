@@ -2,11 +2,105 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Fitzilla.App.Views.Exercises.ExercisePage"
+             xmlns:viewmodels="clr-namespace:Fitzilla.App.ViewModels.Exercises;assembly=Fitzilla.App"
+             xmlns:DTO="clr-namespace:Fitzilla.Core.DTOs;assembly=Fitzilla.Core"
+             x:DataType="viewmodels:ExerciseViewModel"
              Title="ExercisePage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
+
+    <ContentPage.Resources>
+        <Style TargetType="Entry">
+            <Setter Property="FontFamily" Value="Rubik-Regular"/>
+            <Setter Property="FontSize" Value="Medium"/>
+            <Setter Property="TextColor" Value="Black"/>
+            <Setter Property="HorizontalOptions" Value="End"/>
+            <Setter Property="VerticalOptions" Value="Center"/>
+            <Setter Property="MaxLength" Value="2"/>
+            <Setter Property="Keyboard" Value="Numeric"/>
+            <Setter Property="HorizontalTextAlignment" Value="Center"/>
+            <Setter Property="VerticalTextAlignment" Value="Center"/>
+        </Style>
+    </ContentPage.Resources>
+
+    <VerticalStackLayout Padding="0" BackgroundColor="#F3F4F8">
+        <StackLayout HeightRequest="200"
+                        MinimumHeightRequest="200">
+            <Grid RowSpacing="0">
+                <Frame HorizontalOptions="FillAndExpand"
+                        VerticalOptions="FillAndExpand"
+                        Grid.Row="0">
+                    <Frame.Background>
+                        <LinearGradientBrush StartPoint="1,0"
+                                                EndPoint="1,0">
+                            <GradientStop Color="#4D5EE0"
+                                            Offset="0.1" />
+                            <GradientStop Color="#262A48"
+                                            Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Frame.Background>
+
+                    <StackLayout>
+                        <Grid>
+                            <Button Text="Previous"
+                                Grid.Row="0"
+                                TextColor="#8f96ff"
+                                BackgroundColor="Transparent"
+                                HeightRequest="50"
+                                WidthRequest="110"
+                                FontFamily="Rubik-Medium"
+                                HorizontalOptions="Start"
+                                FontSize="16" Grid.Column="0"
+                                Command="{Binding PreviousCommand}"/>
+                            <Button Text="Next"
+                                TextColor="#4458EC"
+                                BackgroundColor="Transparent"
+                                HeightRequest="50"
+                                WidthRequest="70"
+                                FontFamily="Rubik-Medium"
+                                HorizontalOptions="End"
+                                FontSize="16" Grid.Column="0" 
+                                Command="{Binding ContinueCommand}"/>
+                            <Label Text="Add Exercises"
+                                TextColor="White" Grid.Row="2"
+                                FontSize="Title" />
+                            <Label Text="Workout Creation"
+                                TextColor="LightGray"
+                                FontFamily="Rubik-Light"
+                                FontSize="Small" Grid.Row="3"
+                                Margin="0,0,0,10" />
+                        </Grid>
+                    </StackLayout>
+                </Frame>
+            </Grid>
+
+        </StackLayout>
+
+        <Label Text="LIBRARY" Padding="20,5,0,5"/>
+
+        <CollectionView ItemsSource="{Binding Exercises}"
+                        x:Name="SelectedWorkoutColl">
+            <CollectionView.ItemTemplate>
+
+                <DataTemplate x:DataType="DTO:ExerciseDTO">
+                    <Grid Padding="5">
+                        <Frame CornerRadius="10">
+                            <StackLayout Orientation="Horizontal">
+                                <Image Source="{Binding ExerciseType.Icon}"
+                                        WidthRequest="50"/>
+                                <Label Text="{Binding ExerciseType.Name}"
+                                        FontFamily="Rubik-Medium"
+                                        FontSize="Small"
+                                        TextColor="#27262B"
+                                        VerticalOptions="CenterAndExpand"
+                                        HorizontalOptions="StartAndExpand"/>
+                                <Entry Text="{Binding Weight}" Placeholder="Weight"/>
+                                <Entry Text="{Binding Set}" Placeholder="Sets"/>
+                                <Entry Text="{Binding Rep}" Placeholder="Reps"/>
+                            </StackLayout>
+                        </Frame>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
     </VerticalStackLayout>
 </ContentPage>

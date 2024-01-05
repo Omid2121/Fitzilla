@@ -1,6 +1,6 @@
-﻿using Fitzilla.Core.DTOs;
-using Fitzilla.Core.Models;
-using Fitzilla.Data.Data;
+﻿using Fitzilla.DAL.DTOs;
+using Fitzilla.DAL.Models;
+using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -8,7 +8,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace Fitzilla.Core.Services
+namespace Fitzilla.BLL.Services
 {
     public class AuthManager : IAuthManager
     {
@@ -43,7 +43,10 @@ namespace Fitzilla.Core.Services
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, _user.UserName)
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Sub, _user.Email),
+
+                //new Claim(ClaimTypes.Name, _user.UserName)
             };
             var roles = await _userManager.GetRolesAsync(_user);
             foreach (var role in roles)
@@ -86,7 +89,7 @@ namespace Fitzilla.Core.Services
             return newRefreshToken;
         }
 
-        public async Task<TokenRequest> VerifyRefreshToken(TokenRequest tokenRequest)
+        public async Task<AuthResponse> VerifyRefreshToken(AuthResponse tokenRequest)
         {
             var jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
             var tokenContent = jwtSecurityTokenHandler.ReadJwtToken(tokenRequest.Token);
@@ -98,7 +101,7 @@ namespace Fitzilla.Core.Services
                 var isValid = await _userManager.VerifyUserTokenAsync(_user, "FitzillaApi", "RefreshToken", tokenRequest.RefreshToken);
                 if (isValid)
                 {
-                    return new TokenRequest
+                    return new AuthResponse
                     {
                         Token = await CreateToken(),
                         RefreshToken = await CreateRefreshToken()
@@ -112,6 +115,11 @@ namespace Fitzilla.Core.Services
             }
 
             return null;
+        }
+
+        public void RevokeRefreshToken(string refreshToken, string email)
+        {
+
         }
 
         public async Task<string> GetUserRoleById(string userId)

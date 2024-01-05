@@ -1,11 +1,4 @@
-﻿using Fitzilla.Data.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Fitzilla.App.Services
+﻿namespace Fitzilla.App.Services
 {
     public interface IDataStore<T, C>
     {

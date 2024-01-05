@@ -2,11 +2,57 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Fitzilla.App.Views.Authentication.LandingPage"
+             xmlns:viewModels="clr-namespace:Fitzilla.App.ViewModels.Authentication;assembly=Fitzilla.App"
+             x:DataType="viewModels:LandingPageViewModel"
              Title="LandingPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+
+    <Grid RowDefinitions="2*,1*" BackgroundColor="#F3F4F8">
+
+        <VerticalStackLayout Grid.Row="0" Margin="0,100">
+            <Image Source="ic_launcher"
+                    HeightRequest="100"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Fill" />
+            <Label Text="Welcome to Fitzilla"
+                    TextColor="Black"
+                    FontSize="Title"
+                    FontFamily="Rubik-Regular" HorizontalOptions="Center" />
+            <Label Text="Sign Up to continue" HorizontalOptions="Center"
+                    HorizontalTextAlignment="Start"
+                    VerticalTextAlignment="Center"
+                    FontSize="Subtitle"                   
+                    FontFamily="Rubik-Light" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Grid.Row="1" VerticalOptions="Center" Spacing="2" Padding="20">
+            <Button Text="LOG IN"
+                    TextColor="White"                               
+                    FontAttributes="Bold"
+                    CornerRadius="10"
+                    FontFamily="Rubik-Medium" MinimumHeightRequest="50"
+                    Command="{Binding LoginCommand}">
+                <Button.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#26294C" Offset="0.1" />
+                        <GradientStop Color="#3346D3"  Offset="1.0" />
+                    </LinearGradientBrush>
+                </Button.Background>
+            </Button>
+
+            <Button Text="SIGN UP"
+                        TextColor="White"
+                        FontAttributes="Bold" MinimumHeightRequest="50"
+                        CornerRadius="10"
+                        FontFamily="Rubik-Medium"
+                        Command="{Binding SignUpCommand}">
+                <Button.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#26294C" Offset="0.1" />
+                        <GradientStop Color="#3346D3"  Offset="1.0" />
+                    </LinearGradientBrush>
+                </Button.Background>
+            </Button>
+        </VerticalStackLayout>
+
+    </Grid>
 </ContentPage>

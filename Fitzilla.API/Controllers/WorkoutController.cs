@@ -1,11 +1,10 @@
 ﻿using AutoMapper;
-using Fitzilla.Core.DTOs;
-using Fitzilla.Core.IRepository;
-using Fitzilla.Core.Models;
-using Fitzilla.Core.Services;
-using Fitzilla.Data.Data;
+using Fitzilla.BLL.Services;
+using Fitzilla.DAL.DTOs;
+using Fitzilla.DAL.IRepository;
+using Fitzilla.DAL.Models;
+using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 
@@ -28,6 +27,24 @@ namespace Fitzilla.API.Controllers
         }
 
         #region Endpoints allowed for Authorized users(Admin, Consumer).
+
+        [Authorize(Roles = "Admin,Consumer")]
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAllWorkouts([FromQuery] string? includeProperties = null, [FromQuery] string? orderBy = null)
+        {
+            List<string>? includeList = !string.IsNullOrEmpty(includeProperties) ? includeProperties.Split(',').ToList() : null;
+            Func<IQueryable<Workout>, IOrderedQueryable<Workout>>? orderByExpression = null;
+            IEnumerable<Workout> workouts = await _unitOfWork.Workouts.GetAll(expression: null, orderByExpression, includeList);
+            var currentUser = await _authManager.GetCurrentUser(User);
+            var userRole = await _authManager.GetUserRoleById(currentUser.Id);
+            if (userRole != "Admin")
+            {
+                workouts = workouts.Where(w => w.CreatorId == currentUser.Id);
+            }
+            var result = _mapper.Map<IList<WorkoutDTO>>(workouts);
+            return Ok(result);
+        }
 
         [Authorize(Roles = "Admin,Consumer")]
         [HttpGet]

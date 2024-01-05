@@ -1,13 +1,9 @@
-﻿using Fitzilla.Data.Data;
+﻿using Fitzilla.DAL.Configurations.SeedData;
+using Fitzilla.Models.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Fitzilla.Data.Configurations.Entities
+namespace Fitzilla.DAL.Configurations.Entities
 {
     public class WorkoutConfiguration : IEntityTypeConfiguration<Workout>
     {
@@ -25,6 +21,8 @@ namespace Fitzilla.Data.Configurations.Entities
             builder.HasMany(workout => workout.Exercises)
                 .WithOne(exercise => exercise.Workout)
                 .HasForeignKey(exercise => exercise.WorkoutId);
+
+            builder.HasData(WorkoutSeedData.Workouts());
         }
     }
 }

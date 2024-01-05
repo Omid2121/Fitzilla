@@ -102,10 +102,28 @@
 	  <MauiXaml Update="Views\Macro\MacroPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Views\Plus\PlusPage.xaml">
+	  <MauiXaml Update="Views\Workouts\CreateWorkoutPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Workouts\WorkoutsPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Profile\AboutPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Profile\MyMacrosPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Profile\MyStepsPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Profile\MyWorkoutsPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\Profile\ProfilePage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\Profile\SettingsPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	</ItemGroup>
@@ -116,6 +134,9 @@
 	  </Compile>
 	  <Compile Update="Views\Authentication\Register\RegisterCredentialPage.xaml.cs">
 	    <DependentUpon>RegisterCredentialPage.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\Workouts\WorkoutsPage.xaml.cs">
+	    <DependentUpon>WorkoutsPage.xaml</DependentUpon>
 	  </Compile>
 	</ItemGroup>
 

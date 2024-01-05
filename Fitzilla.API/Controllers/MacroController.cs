@@ -1,11 +1,10 @@
 ﻿using AutoMapper;
-using Fitzilla.Core.DTOs;
-using Fitzilla.Core.IRepository;
-using Fitzilla.Core.Models;
-using Fitzilla.Core.Services;
-using Fitzilla.Data.Data;
+using Fitzilla.BLL.Services;
+using Fitzilla.DAL.DTOs;
+using Fitzilla.DAL.IRepository;
+using Fitzilla.DAL.Models;
+using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 

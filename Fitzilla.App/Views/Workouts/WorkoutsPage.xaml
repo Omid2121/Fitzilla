@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Fitzilla.App.Views.Plus.PlusPage"
+             xmlns:viewmodels="clr-namespace:Fitzilla.App.ViewModels.Workouts;assembly=Fitzilla.App"
+             xmlns:DTO="clr-namespace:Fitzilla.Core.DTOs;assembly=Fitzilla.Core"
+             x:DataType="viewmodels:WorkoutsViewModel"
+             Title="PlusPage">
+
+    <VerticalStackLayout Padding="0" BackgroundColor="#F3F4F8">
+        <Label Text="Workouts"
+                VerticalOptions="Start" 
+                HorizontalOptions="StartAndExpand" />
+        <Label Text="Custom Workouts"/>
+
+        <ScrollView>
+            <Grid>
+                <Label Text="WORKOUTS" Padding="20,5,0,5"/>
+                <CollectionView ItemsSource="{Binding Workouts}">
+                    <CollectionView.ItemTemplate>
+
+                        <DataTemplate x:DataType="DTO:WorkoutDTO">
+                            <Grid>
+                                <Frame CornerRadius="10" BorderColor="Black">
+                                    <Grid>
+                                        <Label Text="{Binding Name}"/>
+                                        <Button Text="Settings" Command="{Binding WorkoutSettings}" x:DataType="viewmodel:WorkoutsViewModel"/>
+                                        <Label Text="{Binding TargetMuscle}"/>
+                                        <Label Text="Exercises"/>
+                                        <Button Text="Start" Command="{Binding StartWorkout}" x:DataType="viewmodel:WorkoutsViewModel"/>
+                                    </Grid>
+                                </Frame>
+                            </Grid>
+                        </DataTemplate>
+
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </ScrollView>
+    </VerticalStackLayout>
+</ContentPage>

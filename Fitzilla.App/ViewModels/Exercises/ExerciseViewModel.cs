@@ -43,7 +43,7 @@ namespace Fitzilla.App.ViewModels.Exercises
             {
                 await _exerciseService.AddItemAsync(new CreateExerciseDTO
                 {
-                    ExerciseTypeId = Exercise.ExerciseType.Id.ToString(),
+                    ExerciseTypeId = Exercise.ExerciseType.Id,
 
                 });
             }

@@ -4,11 +4,49 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:Fitzilla.App"
-    Shell.FlyoutBehavior="Disabled">
+    xmlns:auth_view="clr-namespace:Fitzilla.App.Views.Authentication;assembly=Fitzilla.App"
+    xmlns:exercise_view="clr-namespace:Fitzilla.App.Views.Exercises;assembly=Fitzilla.App"
+    xmlns:home_view="clr-namespace:Fitzilla.App.Views.Home;assembly=Fitzilla.App"
+    xmlns:macro_view="clr-namespace:Fitzilla.App.Views.Macro;assembly=Fitzilla.App"
+    xmlns:plus_view="clr-namespace:Fitzilla.App.Views.Plus;assembly=Fitzilla.App"
+    xmlns:profile_view="clr-namespace:Fitzilla.App.Views.Profile;assembly=Fitzilla.App"
+    Shell.FlyoutBehavior="Disabled"
+    Shell.NavBarIsVisible="False">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <Shell.Resources>
+        <ResourceDictionary>
+            <Style x:Key="BaseStyle" TargetType="Element">
+                <Setter Property="Shell.BackgroundColor" Value="{StaticResource Primary}" />
+                <Setter Property="Shell.ForegroundColor" Value="#97a3b8" />
+                <Setter Property="Shell.TitleColor" Value="White" />
+                <Setter Property="Shell.DisabledColor" Value="#97a3b8" />
+                <Setter Property="Shell.UnselectedColor" Value="#97a3b8" />
+                <Setter Property="Shell.TabBarBackgroundColor" Value="{StaticResource Primary}" />
+                <Setter Property="Shell.TabBarForegroundColor" Value="#3346D3"/>
+                <Setter Property="Shell.TabBarUnselectedColor" Value="#97a3b8"/>
+                <Setter Property="Shell.TabBarTitleColor" Value="#3346d3"/>
+            </Style>
+            <Style TargetType="TabBar" BasedOn="{StaticResource BaseStyle}" />
+            <Style TargetType="FlyoutItem" BasedOn="{StaticResource BaseStyle}" />
+        </ResourceDictionary>
+    </Shell.Resources>
+
+    <ShellItem Route="LandingPage">
+        <ShellContent ContentTemplate="{DataTemplate auth_view:LandingPage}" />
+    </ShellItem>
+
+    <TabBar>
+        <ShellContent Title="Home" Icon="home.png" Route="HomePage"
+                      ContentTemplate="{DataTemplate home_view:HomePage}"/>
+        <ShellContent Title="Exercises" Icon="muscle.png"
+                      ContentTemplate="{DataTemplate exercise_view:ExerciseTypePage}"/>
+        <ShellContent Icon="add.png" Route="PlusPage"
+                      ContentTemplate="{DataTemplate plus_view:PlusPage}"/>
+        <ShellContent Title="Macro" Icon="kcal.png" Route="MacroPage"
+                      ContentTemplate="{DataTemplate macro_view:MacroPage}"/>
+        <ShellContent Title="Profile" Icon="user.png" Route="ProfilePage"
+                      ContentTemplate="{DataTemplate profile_view:ProfilePage}"/>
+
+    </TabBar>
 
 </Shell>

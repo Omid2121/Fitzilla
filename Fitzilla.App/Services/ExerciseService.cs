@@ -6,7 +6,7 @@ namespace Fitzilla.App.Services
 {
     public class ExerciseService : IDataStore<ExerciseDTO, CreateExerciseDTO>
     {
-        private static readonly HttpClient HttpClient = new HttpClient();
+        private static readonly HttpClient HttpClient = new();
         private readonly string ExerciseURL =
             $"{IDataStore<ExerciseDTO, CreateExerciseDTO>.API_URL}/{nameof(Exercise)}";
 
@@ -22,19 +22,19 @@ namespace Fitzilla.App.Services
         {
             //TODO: Make sure HttpRequestMessage's URl is correct.
             HttpResponseMessage responseMessage = await HttpClient
-                .DeleteAsync($"{ExerciseURL}?{id}");
+                .DeleteAsync($"{ExerciseURL}/{id}");
             return responseMessage.IsSuccessStatusCode;
         }
 
         //TODO: Make sure HttpRequestMessage's URl is correct.
-        public async Task<ExerciseDTO> GetItemAsync(string id) => (await RequestItemsAsync($"?{id}")).FirstOrDefault();
+        public async Task<ExerciseDTO> GetItemAsync(string id) => (await RequestItemsAsync($"/{id}")).FirstOrDefault();
 
         public async Task<IEnumerable<ExerciseDTO>> GetItemsAsync(bool forceRefresh = false) => await RequestItemsAsync();
 
         public async Task<bool> UpdateItemAsync(ExerciseDTO item)
         {
             //TODO: Make sure HttpRequestMessage's URl is correct.
-            HttpResponseMessage responseMessage = await HttpClient.PutAsJsonAsync($"{ExerciseURL}?{item.Id}", item);
+            HttpResponseMessage responseMessage = await HttpClient.PutAsJsonAsync($"{ExerciseURL}/{item.Id}", item);
             await Shell.Current.DisplayAlert("Success", await responseMessage.Content.ReadAsStringAsync(), "OK");
             return responseMessage.IsSuccessStatusCode;
         }

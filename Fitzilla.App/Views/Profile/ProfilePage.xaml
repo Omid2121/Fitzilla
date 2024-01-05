@@ -2,11 +2,56 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Fitzilla.App.Views.Profile.ProfilePage"
+             xmlns:viewmodels="clr-namespace:Fitzilla.App.ViewModels.Profile;assembly=Fitzilla.App"
+             xmlns:DTO="clr-namespace:Fitzilla.Core.DTOs;assembly=Fitzilla.Core"
+             x:DataType="viewmodels:ProfileViewModel"
              Title="ProfilePage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
+
+    <VerticalStackLayout Padding="0" BackgroundColor="#F3F4F8">
+
+        <Frame HeightRequest="200" MinimumHeightRequest="200" Grid.Row="0">
+            <Frame.Background>
+                <LinearGradientBrush StartPoint="0,0"
+                                            EndPoint="1,0">
+                    <GradientStop Color="#4D5EE0"
+                                        Offset="0.1" />
+                    <GradientStop Color="#26294C"
+                                        Offset="1.0" />
+                </LinearGradientBrush>
+            </Frame.Background>
+
+            <StackLayout VerticalOptions="EndAndExpand" x:DataType="DTO:UserDTO">
+                <Image Source="user.png" HeightRequest="70"/>
+
+                <Label Text="{Binding Username}"
+                        HorizontalTextAlignment="Center"
+                        VerticalTextAlignment="Center"
+                        FontAttributes="Bold"
+                        FontSize="Medium" />
+                <Label Text="{Binding Email}"
+                        HorizontalTextAlignment="Center"
+                        VerticalTextAlignment="Center"/>
+            </StackLayout>
+
+        </Frame>
+
+        <ScrollView>
+            <StackLayout  Padding="10,0">
+                <Button Text="About"
+                    TextColor="#3443A3" Command="{Binding AboutCommand}" />
+                <Button Text="My Workouts"
+                    TextColor="#3443A3" Command="{Binding MyWorkoutsCommand}"/>
+                <Button Text="My Macros"
+                    TextColor="#3443A3" Command="{Binding MyMacrosCommand}"/>
+                <Button Text="My Steps"
+                    TextColor="#3443A3" Command="{Binding MyStepsCommand}"/>
+                <Button Text="settings"
+                    TextColor="#3443A3" Command="{Binding SettingsCommand}"/>
+                <Button Text="Log Out"
+                    TextColor="#3443A3" Command="{Binding SignOutCommand}" />
+
+            </StackLayout>
+        </ScrollView>
+
     </VerticalStackLayout>
 </ContentPage>

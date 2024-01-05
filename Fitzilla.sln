@@ -5,11 +5,15 @@ VisualStudioVersion = 17.5.33627.172
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fitzilla.API", "Fitzilla.API\Fitzilla.API.csproj", "{84363DC0-B203-4D28-810E-D24EC0C90343}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fitzilla.Data", "Fitzilla.Data\Fitzilla.Data.csproj", "{E0A8D5F4-838B-4447-8956-9DB5AC684CDD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fitzilla.DAL", "Fitzilla.Data\Fitzilla.DAL.csproj", "{E0A8D5F4-838B-4447-8956-9DB5AC684CDD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fitzilla.Core", "Fitzilla.Core\Fitzilla.Core.csproj", "{41E9BDE9-CCC7-40E0-BA8A-45764BB0E7F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Fitzilla.BLL", "Fitzilla.Core\Fitzilla.BLL.csproj", "{41E9BDE9-CCC7-40E0-BA8A-45764BB0E7F9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fitzilla.App", "Fitzilla.App\Fitzilla.App.csproj", "{B519F050-D8AF-4107-BFD2-51322409F6C2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fitzilla.Tests", "Fitzilla.Test\Fitzilla.Tests.csproj", "{544D6F79-2F35-4EDC-B9AE-C73A8346FA23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fitzilla.Models", "Fitzilla.Models\Fitzilla.Models.csproj", "{8DB1D3DD-27F2-4FAB-BCCF-28F2A8F17388}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +39,14 @@ Global
 		{B519F050-D8AF-4107-BFD2-51322409F6C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B519F050-D8AF-4107-BFD2-51322409F6C2}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B519F050-D8AF-4107-BFD2-51322409F6C2}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{544D6F79-2F35-4EDC-B9AE-C73A8346FA23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{544D6F79-2F35-4EDC-B9AE-C73A8346FA23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{544D6F79-2F35-4EDC-B9AE-C73A8346FA23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{544D6F79-2F35-4EDC-B9AE-C73A8346FA23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DB1D3DD-27F2-4FAB-BCCF-28F2A8F17388}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DB1D3DD-27F2-4FAB-BCCF-28F2A8F17388}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DB1D3DD-27F2-4FAB-BCCF-28F2A8F17388}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DB1D3DD-27F2-4FAB-BCCF-28F2A8F17388}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

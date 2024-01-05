@@ -41,7 +41,6 @@ namespace Fitzilla.App
             builder.Services.AddSingleton<MarcoViewModel>();
             builder.Services.AddSingleton<ProfileViewModel>();
 
-
             return builder.Build();
         }
     }

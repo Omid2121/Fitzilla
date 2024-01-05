@@ -2,11 +2,102 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Fitzilla.App.Views.Authentication.LoginPage"
+             xmlns:viewModels="clr-namespace:Fitzilla.App.ViewModels.Authentication;assembly=Fitzilla.App"
+             x:DataType="viewModels:LoginPageViewModel"
              Title="LoginPagePage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+
+    <Grid RowDefinitions="*" BackgroundColor="#F3F4F8">
+        <StackLayout Grid.Row="0" VerticalOptions="Center" Margin="20,0">
+
+            <StackLayout>
+                <Label Text="LOGIN" 
+                       TextColor="Black" 
+                       FontSize="Title" 
+                       HorizontalOptions="Center"
+                       FontAttributes="Bold" 
+                       FontFamily="Rubik-Regular"/>
+
+                <StackLayout Margin="0, 25, 0, 0" Spacing="5">
+                    <Frame BackgroundColor="Transparent" BorderColor="Gray" Padding="0" Margin="0" CornerRadius="50" HorizontalOptions="FillAndExpand">
+                        <StackLayout Orientation="Horizontal">
+                            <Frame BackgroundColor="#3346D3" CornerRadius="50" HeightRequest="35" WidthRequest="35" Padding="0" HorizontalOptions="Start" Margin="7">
+
+                            </Frame>
+
+                            <Entry Placeholder="Username"  
+                                    FontSize="Medium"        
+                                    BackgroundColor="Transparent"
+                                    TextColor="Black" HorizontalOptions="FillAndExpand" VerticalOptions="Center"
+                                    FontFamily="Rubik-Regular" Margin="0, 0, 15, 0"
+                                    Text="{Binding Username}"/>
+                        </StackLayout>
+                    </Frame>
+
+                    <Frame BackgroundColor="Transparent" BorderColor="Gray" Padding="0" Margin="0" CornerRadius="50" HorizontalOptions="FillAndExpand">
+                        <StackLayout Orientation="Horizontal">
+                            <Frame BackgroundColor="#3346D3" CornerRadius="50" HeightRequest="35" WidthRequest="35" Padding="0" HorizontalOptions="Start" Margin="7">
+
+                            </Frame>
+
+                            <Entry Placeholder="Password"
+                                    TextColor="Black"
+                                    FontSize="Medium"
+                                    BackgroundColor="Transparent"
+                                    HorizontalOptions="FillAndExpand" VerticalOptions="Center"
+                                    FontFamily="Rubik-Regular"
+                                    Margin="0, 0, 15, 0" IsPassword="True"
+                                    Text="{Binding Password}"/>
+                        </StackLayout>
+                    </Frame>
+
+                </StackLayout>
+
+                <HorizontalStackLayout>
+                    <CheckBox IsChecked="False"
+                                Color="#3346D3"/>
+                    <Label Text="Remember me"
+                            HorizontalTextAlignment="Start"
+                            VerticalTextAlignment="Center"/>
+
+                    <Label Text="Forgot Password"
+                            HorizontalTextAlignment="End"
+                            TextColor="#3346D3"
+                            HorizontalOptions="EndAndExpand"
+                            VerticalTextAlignment="Center"
+                            FontFamily="Rubik-Bold" />
+                </HorizontalStackLayout>
+
+                <Button Text="SIGN IN"
+                        TextColor="White"
+                        FontAttributes="Bold"
+                        CornerRadius="10"
+                        MinimumHeightRequest="50"
+                        Command="{Binding ContinueCommand}">
+                    <Button.Background>
+                        <LinearGradientBrush StartPoint="0,0"
+                                                EndPoint="1,0">
+                            <GradientStop Color="#3346D3"
+                                            Offset="0.1" />
+                            <GradientStop Color="#26294C"
+                                            Offset="1.0" />
+                        </LinearGradientBrush>
+                    </Button.Background>
+                </Button>
+
+                <HorizontalStackLayout HorizontalOptions="Center">
+                    <Label Text="You don't have a account?" HorizontalTextAlignment="Center"
+                            VerticalTextAlignment="Center"
+                            FontFamily="Rubik-Medium" />
+
+                    <Button Text="Sign Up"
+                            BackgroundColor="Transparent"
+                            TextColor="#3346D3"
+                            FontFamily="Rubik-Medium"
+                            Command="{Binding PreviousCommand}" />
+                </HorizontalStackLayout>
+
+            </StackLayout>
+
+        </StackLayout>
+    </Grid>
 </ContentPage>

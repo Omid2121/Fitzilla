@@ -1,20 +1,15 @@
-﻿using Fitzilla.Core.DTOs;
-using Fitzilla.Core.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Fitzilla.DAL.DTOs;
+using Fitzilla.DAL.Models;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Fitzilla.Core.Services
+namespace Fitzilla.BLL.Services
 {
     public interface IAuthManager
     {
         Task<bool> ValidateUser(LoginUserDTO userDTO);
         Task<string> CreateToken();
         Task<string> CreateRefreshToken();
-        Task<TokenRequest> VerifyRefreshToken(TokenRequest tokenRequest);
+        Task<AuthResponse> VerifyRefreshToken(AuthResponse tokenRequest);
         Task<string> GetUserRoleById(string userId);
         Task<UserDTO> GetCurrentUser(ClaimsPrincipal claimsPrincipal);
     }
