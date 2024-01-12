@@ -9,19 +9,19 @@ using System.Threading.Tasks;
 
 namespace Fitzilla.Tests.Integration.Repositories
 {
-    public class WorkoutRepositoryTests : GenericRepositoryTests<Workout>
+    public class WorkoutRepositoryTests : GenericRepositoryTests<Plan>
     {
-        protected override GenericRepository<Workout> Repo => UnitOfWork.Workouts;
+        protected override GenericRepository<Plan> Repo => UnitOfWork.Workouts;
 
-        protected override Workout CreateModel()
+        protected override Plan CreateModel()
         {
-            return new Workout
+            return new Plan
             {
                 Id = Guid.NewGuid(),
                 Name = "New Workout",
                 Description = "New description for workout",
                 TargetMuscle = TargetedMuscle.SHOULDERS,
-                CreationTime = DateTime.Now,
+                CreatedAt = DateTime.Now,
                 Creator = new User()
                 {
                     Id = Guid.NewGuid().ToString(),

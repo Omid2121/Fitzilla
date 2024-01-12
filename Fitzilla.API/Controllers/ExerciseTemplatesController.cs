@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
+using Fitzilla.BLL.DTOs;
 using Fitzilla.BLL.Services;
-using Fitzilla.DAL.DTOs;
 using Fitzilla.DAL.IRepository;
 using Fitzilla.DAL.Models;
 using Fitzilla.Models.Data;
@@ -12,20 +12,19 @@ namespace Fitzilla.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public class ExerciseTemplateController : ControllerBase
+    public class ExerciseTemplatesController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IAuthManager _authManager;
 
-        public ExerciseTemplateController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager)
+        public ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _authManager = authManager;
         }
 
-        #region Endpoints allowed for everyone.
 
         [AllowAnonymous]
         [HttpGet]
@@ -60,17 +59,13 @@ namespace Fitzilla.API.Controllers
             if (string.IsNullOrEmpty(searchRequest)) return BadRequest("Submitted data is invalid.");
 
             var exerciseTemplates = await _unitOfWork.ExerciseTemplates
-                .Search(exerciseTemplate => exerciseTemplate.Name.ToLower()
+                .Search(exerciseTemplate => exerciseTemplate.Title.ToLower()
                 .Contains(searchRequest.ToLower()));
 
             var result = _mapper.Map<IList<ExerciseTemplateDTO>>(exerciseTemplates);
 
             return Ok(result);
         }
-
-        #endregion
-
-        #region Endpoints allowed for Authorized users(Admin, Consumer).
 
         [Authorize (Roles = "Admin,Consumer")]
         [HttpGet("GetExerciseTemplatesWithRelation")]
@@ -160,16 +155,6 @@ namespace Fitzilla.API.Controllers
 
             return NoContent();
         }
-
-        private async Task<bool> IsAuthorized(string exerciseTemplateUserId)
-        {
-            var currentUser = await _authManager.GetCurrentUser(User);
-            var userRole = await _authManager.GetUserRoleById(currentUser.Id);
-
-            return exerciseTemplateUserId == currentUser.Id || (userRole == "Admin");
-        }
-
-        #endregion
 
     }
 }

@@ -8,26 +8,23 @@ using System.Threading.Tasks;
 
 namespace Fitzilla.DAL.Configurations.SeedData
 {
-    public static class MacroSeedData
+    public class SessionSeedData
     {
-        public static List<Macro> Macros()
+        public static List<Session> Sessions()
         {
             User? user = UserSeedData.Users().FirstOrDefault();
-            return new List<Macro>()
+            return new List<Session>()
             {
-                new Macro
+                new Session
                 {
                     Id = Guid.NewGuid(),
-                    Title = "Test Macro",
-                    ConsumeType = ConsumeType.SURPLUS,
-                    Intensity = Intensity.SEDENTARY,
-                    Calorie = 3000,
-                    Protein = 70,
-                    Carbohydrate = 330,
-                    Fat = 45,
+                    Title = "Test Workout",
+                    Description = "Workout description",
+                    TargetMuscle = TargetedMuscle.SHOULDERS,
                     CreatedAt = DateTime.Now,
                     CreatorId = user.Id,
                     Creator = user,
+                    Exercises = ExerciseSeedData.Exercises()
                 }
             };
         }

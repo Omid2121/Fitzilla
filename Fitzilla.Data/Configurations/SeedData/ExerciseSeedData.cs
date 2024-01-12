@@ -18,13 +18,13 @@ namespace Fitzilla.DAL.Configurations.SeedData
                 new Exercise
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Test Exercise",
+                    Title = "Test Exercise",
                     Description = "Exercise description",
                     Image = "ExerciseImage.png",
                     Set = 3,
                     Rep = 10,
                     Weight = 60,
-                    CreationTime = DateTime.Now,
+                    CreatedAt = DateTime.Now,
                     CreatorId = user.Id,
                     Creator = user,
                 }

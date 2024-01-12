@@ -1,4 +1,4 @@
-﻿using Fitzilla.DAL.DTOs;
+﻿using Fitzilla.BLL.DTOs;
 using Fitzilla.DAL.Models;
 using System.Security.Claims;
 

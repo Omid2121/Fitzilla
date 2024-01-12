@@ -123,7 +123,7 @@ namespace Fitzilla.Tests.Integration.Repositories
             var entity = CreateModel();
             DateTimeOffset modifiedTime = DateTimeOffset.UtcNow;
             await Repository.Insert(entity);
-            entity.LastModifiedTime = modifiedTime;
+            entity.ModifiedAt = modifiedTime;
 
             // Act
             Repository.Update(entity);
@@ -131,7 +131,7 @@ namespace Fitzilla.Tests.Integration.Repositories
             // Assert
             // Check if the entity has been updated in the repository
             var result = Repository.Get(e => e.Id == entity.Id);
-            Assert.Equal(modifiedTime, result.Result.LastModifiedTime);
+            Assert.Equal(modifiedTime, result.Result.ModifiedAt);
         }
 
         //[Fact]

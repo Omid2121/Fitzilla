@@ -1,12 +1,14 @@
 ﻿using Fitzilla.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace Fitzilla.DAL.DTOs
+namespace Fitzilla.BLL.DTOs
 {
     public class CreateMacroDTO
     {
         [Required]
-        public string Name { get; set; }
+        public string Title { get; set; }
+        
+        public string? Description { get; set; }
 
         [Required]
         public ConsumeType ConsumeType { get; set; }
@@ -14,15 +16,17 @@ namespace Fitzilla.DAL.DTOs
         [Required]
         public Intensity Intensity { get; set; }
 
+        [Required]
         public double Calories { get; set; }
 
+        [Required]
         public double Protein { get; set; }
 
+        [Required]
         public double Carbohydrates { get; set; }
 
+        [Required]
         public double Fat { get; set; }
-
-        public DateTimeOffset CreationTime { get; set; }
 
         [Required]
         public string CreatorId { get; set; }
@@ -31,13 +35,10 @@ namespace Fitzilla.DAL.DTOs
     {
         public Guid Id { get; set; }
 
-        public DateTimeOffset? LastModifiedTime { get; set; }
-
-        public UserDTO Creator { get; set; }
+        public string CreatorEmail { get; set; }
     }
 
     public class UpdateMacroDTO : CreateMacroDTO
     {
-        public DateTimeOffset? LastModifiedTime { get; set; }
     }
 }

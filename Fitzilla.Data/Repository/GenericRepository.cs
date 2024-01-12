@@ -86,14 +86,12 @@ namespace Fitzilla.DAL.Repository
         public async Task Insert(T entity)
         {
             entity.Id = Guid.NewGuid();
-            entity.CreationTime = DateTimeOffset.Now;
             await _dbSet.AddAsync(entity);
         }
 
         public async Task InsertRange(IEnumerable<T> entities)
         {
             entities.Select(entity => entity.Id = Guid.NewGuid());
-            entities.Select(entity => entity.CreationTime = DateTimeOffset.Now);
             await _dbSet.AddRangeAsync(entities);
         }
 
@@ -118,7 +116,6 @@ namespace Fitzilla.DAL.Repository
 
         public void Update(T entity)
         {
-            entity.LastModifiedTime = DateTimeOffset.Now;
             _dbSet.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
         }

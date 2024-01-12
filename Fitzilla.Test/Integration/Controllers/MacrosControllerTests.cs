@@ -13,12 +13,12 @@ using Fitzilla.Models.Enums;
 
 namespace Fitzilla.Tests.Integration.Controllers
 {
-    public class MacroControllerTests : WebApiApplication
+    public class MacrosControllerTests : WebApiApplication
     {
         private readonly HttpClient _client;
         private readonly ITestOutputHelper _testOutputHelper;
         private List<Macro> Macros { get; set; } = new();
-        public MacroControllerTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+        public MacrosControllerTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
             _client = new WebApiApplication(_testOutputHelper).CreateClient();
@@ -40,15 +40,15 @@ namespace Fitzilla.Tests.Integration.Controllers
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
             result.Count.Should().Be(1);
-            result[0].Name.Should().Be(Macros[0].Name);
+            result[0].Title.Should().Be(Macros[0].Title);
             result[0].ConsumeType.Should().Be(Macros[0].ConsumeType);
             result[0].Intensity.Should().Be(Macros[0].Intensity);
             result[0].Calorie.Should().Be(Macros[0].Calorie);
             result[0].Protein.Should().Be(Macros[0].Protein);
             result[0].Carbohydrate.Should().Be(Macros[0].Carbohydrate);
             result[0].Fat.Should().Be(Macros[0].Fat);
-            result[0].CreationTime.Should().Be(Macros[0].CreationTime);
-            result[0].LastModifiedTime.Should().Be(Macros[0].LastModifiedTime);
+            result[0].CreatedAt.Should().Be(Macros[0].CreatedAt);
+            result[0].ModifiedAt.Should().Be(Macros[0].ModifiedAt);
             result[0].CreatorId.Should().Be(Macros[0].CreatorId);
             result[0].Creator.Should().Be(Macros[0].Creator);
             
@@ -66,15 +66,15 @@ namespace Fitzilla.Tests.Integration.Controllers
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            result.Name.Should().Be(Macros[0].Name);
+            result.Title.Should().Be(Macros[0].Title);
             result.ConsumeType.Should().Be(Macros[0].ConsumeType);
             result.Intensity.Should().Be(Macros[0].Intensity);
             result.Calorie.Should().Be(Macros[0].Calorie);
             result.Protein.Should().Be(Macros[0].Protein);
             result.Carbohydrate.Should().Be(Macros[0].Carbohydrate);
             result.Fat.Should().Be(Macros[0].Fat);
-            result.CreationTime.Should().Be(Macros[0].CreationTime);
-            result.LastModifiedTime.Should().Be(Macros[0].LastModifiedTime);
+            result.CreatedAt.Should().Be(Macros[0].CreatedAt);
+            result.ModifiedAt.Should().Be(Macros[0].ModifiedAt);
             result.CreatorId.Should().Be(Macros[0].CreatorId);
             result.Creator.Should().Be(Macros[0].Creator);
         }
@@ -132,8 +132,8 @@ namespace Fitzilla.Tests.Integration.Controllers
                 Protein = 200,
                 Carbohydrate = 200,
                 Fat = 200,
-                CreationTime = Macros[0].CreationTime,
-                LastModifiedTime = Macros[0].LastModifiedTime,
+                CreatedAt = Macros[0].CreatedAt,
+                ModifiedAt = Macros[0].ModifiedAt,
                 CreatorId = Macros[0].CreatorId,
                 Creator = Macros[0].Creator
             };
@@ -197,15 +197,15 @@ namespace Fitzilla.Tests.Integration.Controllers
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
             result.Count.Should().Be(1);
-            result[0].Name.Should().Be(Macros[0].Name);
+            result[0].Title.Should().Be(Macros[0].Title);
             result[0].ConsumeType.Should().Be(Macros[0].ConsumeType);
             result[0].Intensity.Should().Be(Macros[0].Intensity);
             result[0].Calorie.Should().Be(Macros[0].Calorie);
             result[0].Protein.Should().Be(Macros[0].Protein);
             result[0].Carbohydrate.Should().Be(Macros[0].Carbohydrate);
             result[0].Fat.Should().Be(Macros[0].Fat);
-            result[0].CreationTime.Should().Be(Macros[0].CreationTime);
-            result[0].LastModifiedTime.Should().Be(Macros[0].LastModifiedTime);
+            result[0].CreatedAt.Should().Be(Macros[0].CreatedAt);
+            result[0].ModifiedAt.Should().Be(Macros[0].ModifiedAt);
             result[0].CreatorId.Should().Be(Macros[0].CreatorId);
             result[0].Creator.Should().Be(Macros[0].Creator);
         }

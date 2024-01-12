@@ -1,26 +1,29 @@
 ﻿using AutoMapper;
+using Fitzilla.BLL.DTOs;
 using Fitzilla.BLL.Services;
-using Fitzilla.DAL.DTOs;
 using Fitzilla.DAL.Models;
+using Fitzilla.Models;
 using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using System.Data;
+using System.Security.Claims;
 
 namespace Fitzilla.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public class AccountController : ControllerBase
+    public class AccountsController : ControllerBase
     {
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
         private readonly IAuthManager _authManager;
 
-        public AccountController(IMapper mapper, UserManager<User> userManager, IAuthManager authManager)
+        public AccountsController(IMapper mapper, UserManager<User> userManager, IAuthManager authManager)
         {
             _mapper = mapper;
             _userManager = userManager;
@@ -47,6 +50,7 @@ namespace Fitzilla.API.Controllers
                 }
                 return BadRequest(ModelState);
             }
+            await _userManager.AddToRoleAsync(user, Role.Consumer);
 
             return Accepted();
         }
@@ -68,8 +72,23 @@ namespace Fitzilla.API.Controllers
             });
         }
 
+        [HttpGet("account")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetAccount()
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (currentUserId == null) return BadRequest();
+
+            var user = await _userManager.FindByIdAsync(currentUserId);
+
+            if (user == null) return NotFound();
+            var result = _mapper.Map<UserDTO>(user);
+
+            return Ok(result);
+        }
+
         //TODO: Make sure it works
-        [Authorize(Roles = "Admin, Customer")]
+        [Authorize(Roles = "Admin, Consumer")]
         [HttpPost("logout")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> Logout()
@@ -80,7 +99,7 @@ namespace Fitzilla.API.Controllers
 
 
         [HttpPost]
-        [Route("refreshtoken")]
+        [Route("refresh-token")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> RefreshToken([FromBody] AuthResponse tokenRequest)
         {
@@ -91,19 +110,14 @@ namespace Fitzilla.API.Controllers
             return Ok(tokenRequestResult);
         }
 
-        [HttpPatch("update/{id}")]
+        [HttpPut("update/{userId}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdateAccount(string id, [FromBody] JsonPatchDocument<UpdateUserDTO> patchDoc)
+        public async Task<IActionResult> UpdateAccount(string userId, [FromBody] UpdateUserDTO userDTO)
         {
-            if (!ModelState.IsValid || string.IsNullOrEmpty(id)) return BadRequest(ModelState);
+            if (!ModelState.IsValid || string.IsNullOrEmpty(userId)) return BadRequest(ModelState);
 
-            var user = await _userManager.FindByIdAsync(id);
-            if (user == null) return BadRequest("Account does not exist");
-
-            var userDTO = _mapper.Map<UpdateUserDTO>(user);
-            patchDoc.ApplyTo(userDTO, ModelState);
-
-            if (!TryValidateModel(userDTO)) return BadRequest(ModelState);
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return NotFound("Account does not exist");
 
             _mapper.Map(userDTO, user);
             var result = await _userManager.UpdateAsync(user);
@@ -119,30 +133,6 @@ namespace Fitzilla.API.Controllers
 
             return NoContent();
         }
-
-        //[HttpPut("update/{id}")]
-        //[ProducesResponseType(StatusCodes.Status204NoContent)]
-        //public async Task<IActionResult> UpdateAccount(string id, [FromBody] UpdateUserDTO userDTO)
-        //{
-        //    if (!ModelState.IsValid || string.IsNullOrEmpty(id)) return BadRequest(ModelState);
-
-        //    var user = await _userManager.FindByIdAsync(id);
-        //    if (user == null) return BadRequest("Account does not exist");
-
-        //    _mapper.Map(userDTO, user);
-        //    var result = await _userManager.UpdateAsync(user);
-
-        //    if (!result.Succeeded)
-        //    {
-        //        foreach (var error in result.Errors)
-        //        {
-        //            ModelState.AddModelError(error.Code, error.Description);
-        //        }
-        //        return BadRequest("Account Update attempt failed");
-        //    }
-
-        //    return NoContent();
-        //}
 
         [HttpDelete("delete")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]

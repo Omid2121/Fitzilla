@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
+using Fitzilla.BLL.DTOs;
 using Fitzilla.BLL.Services;
-using Fitzilla.DAL.DTOs;
 using Fitzilla.DAL.IRepository;
 using Fitzilla.DAL.Models;
 using Fitzilla.Models.Data;
@@ -12,20 +12,18 @@ namespace Fitzilla.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public class ExerciseController : ControllerBase
+    public class ExercisesController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IAuthManager _authManager;
 
-        public ExerciseController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager)
+        public ExercisesController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _authManager = authManager;
         }
-
-        #region Endpoints allowed for Authorized users(Admin, Consumer).
 
         [Authorize(Roles = "Admin,Consumer")]
         [HttpGet]
@@ -52,7 +50,7 @@ namespace Fitzilla.API.Controllers
         {
             if (id == Guid.Empty) return BadRequest();
             
-            var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(id), new List<string> { "Workout" });
+            var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(id), new List<string> { "Plan" });
 
             if (!await IsAuthorized(exercise.CreatorId)) return Forbid();
 
@@ -129,7 +127,7 @@ namespace Fitzilla.API.Controllers
             var userRole = await _authManager.GetUserRoleById(currentUser.Id);
 
             IEnumerable<Exercise> exercises = await _unitOfWork.Exercises.Search(exercise =>
-            exercise.Name.ToLower().Contains(searchRequest.ToLower()));
+            exercise.Title.ToLower().Contains(searchRequest.ToLower()));
 
             if (userRole != "Admin")
             {
@@ -145,14 +143,5 @@ namespace Fitzilla.API.Controllers
             return await _unitOfWork.ExerciseTemplates.Get(e => e.Id.Equals(id)) != null;
         }
 
-        private async Task<bool> IsAuthorized(string exerciseUserId)
-        {
-            var currentUser = await _authManager.GetCurrentUser(User);
-            var userRole = await _authManager.GetUserRoleById(currentUser.Id);
-
-            return exerciseUserId == currentUser.Id || (userRole == "Admin");
-        }
-
-        #endregion
     }
 }

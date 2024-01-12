@@ -15,12 +15,12 @@ using Xunit.Abstractions;
 
 namespace Fitzilla.Tests.Integration.Controllers
 {
-    public class ExerciseTemplateControllerTests : WebApiApplication
+    public class ExerciseTemplatesControllerTests : WebApiApplication
     {
         private readonly HttpClient _client;
         private readonly ITestOutputHelper _testOutputHelper;
         private List<ExerciseTemplate> ExerciseTemplates { get; set; } = new();
-        public ExerciseTemplateControllerTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+        public ExerciseTemplatesControllerTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
             _client = new WebApiApplication(_testOutputHelper).CreateClient();
@@ -42,10 +42,10 @@ namespace Fitzilla.Tests.Integration.Controllers
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
             result.Count.Should().Be(1);
-            result[0].Name.Should().Be(ExerciseTemplates[0].Name);
+            result[0].Title.Should().Be(ExerciseTemplates[0].Title);
             result[0].Description.Should().Be(ExerciseTemplates[0].Description);
             result[0].Image.Should().Be(ExerciseTemplates[0].Image);
-            result[0].CreationTime.Should().Be(ExerciseTemplates[0].CreationTime);
+            result[0].CreatedAt.Should().Be(ExerciseTemplates[0].CreatedAt);
         }
 
         [Fact]
@@ -60,10 +60,10 @@ namespace Fitzilla.Tests.Integration.Controllers
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
-            result.Name.Should().Be(ExerciseTemplates[0].Name);
+            result.Title.Should().Be(ExerciseTemplates[0].Title);
             result.Description.Should().Be(ExerciseTemplates[0].Description);
             result.Image.Should().Be(ExerciseTemplates[0].Image);
-            result.CreationTime.Should().Be(ExerciseTemplates[0].CreationTime);
+            result.CreatedAt.Should().Be(ExerciseTemplates[0].CreatedAt);
         }
 
         [Fact]
@@ -113,10 +113,10 @@ namespace Fitzilla.Tests.Integration.Controllers
             ExerciseTemplate updatedModel = new()
             {
                 Id = ExerciseTemplates[0].Id,
-                Name = "Updated ExerciseTemplate",
+                Title = "Updated ExerciseTemplate",
                 Description = "Updated ExerciseTemplate description",
                 Image = "updatedimage.png",
-                CreationTime = DateTime.Now,
+                CreatedAt = DateTime.Now,
             };
             
 
@@ -179,10 +179,10 @@ namespace Fitzilla.Tests.Integration.Controllers
             response.StatusCode.Should().Be(HttpStatusCode.OK);
 
             result.Count.Should().Be(1);
-            result[0].Name.Should().Be(ExerciseTemplates[0].Name);
+            result[0].Title.Should().Be(ExerciseTemplates[0].Title);
             result[0].Description.Should().Be(ExerciseTemplates[0].Description);
             result[0].Image.Should().Be(ExerciseTemplates[0].Image);
-            result[0].CreationTime.Should().Be(ExerciseTemplates[0].CreationTime);
+            result[0].CreatedAt.Should().Be(ExerciseTemplates[0].CreatedAt);
         }
     }
 }

@@ -9,13 +9,26 @@ namespace Fitzilla.DAL.Configurations.Entities
     {
         public void Configure(EntityTypeBuilder<Exercise> builder)
         {
+            // Required fields
             builder.Property(exercise => exercise.Id).IsRequired();
+            builder.Property(exercise => exercise.Title).IsRequired().HasMaxLength(40);
+            builder.Property(exercise => exercise.Set).IsRequired();
+            builder.Property(exercise => exercise.Rep).IsRequired();
+            builder.Property(exercise => exercise.Weight).IsRequired();
+            builder.Property(exercise => exercise.ImageId).IsRequired();
             builder.Property(exercise => exercise.CreatorId).IsRequired();
 
-            builder.HasOne(exercise => exercise.Workout)
-                .WithMany(workout => workout.Exercises)
-                .HasForeignKey(exercise => exercise.WorkoutId);
+            // Exercise has a many-to-one relationship with Image
+            builder.HasOne(exercise => exercise.Image)
+                .WithMany(image => image.Exercises)
+                .HasForeignKey(exercise => exercise.ImageId);
 
+            // Exercise has a many-to-one relationship with Session
+            builder.HasOne(exercise => exercise.Session)
+                .WithMany(session => session.Exercises)
+                .HasForeignKey(exercise => exercise.SessionId);
+
+            // Exercise has a many-to-one relationship with User
             builder.HasOne(exercise => exercise.Creator)
                 .WithMany(user => user.Exercises)
                 .HasForeignKey(exercise => exercise.CreatorId);

@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
+using Fitzilla.BLL.DTOs;
 using Fitzilla.BLL.Services;
-using Fitzilla.DAL.DTOs;
 using Fitzilla.DAL.IRepository;
 using Fitzilla.DAL.Models;
 using Fitzilla.Models.Data;
@@ -13,20 +13,18 @@ namespace Fitzilla.API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public class MacroController : ControllerBase
+    public class MacrosController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly IAuthManager _authManager;
 
-        public MacroController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager)
+        public MacrosController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _authManager = authManager;
         }
-
-        #region Endpoints allowed for Authorized users(Admin, Consumer).
 
         [Authorize(Roles = "Admin,Consumer")]
         [HttpGet]
@@ -125,7 +123,7 @@ namespace Fitzilla.API.Controllers
             var userRole = await _authManager.GetUserRoleById(currentUser.Id);
 
             IEnumerable<Macro> macros = await _unitOfWork.Macros
-                .Search(macro => macro.Name.ToLower()
+                .Search(macro => macro.Title.ToLower()
                 .Contains(searchRequest.ToLower()));
 
             if (userRole != "Admin")
@@ -138,14 +136,5 @@ namespace Fitzilla.API.Controllers
             return Ok(result);
         }
 
-        private async Task<bool> IsAuthorized(string macroUserId)
-        {
-            var currentUser = await _authManager.GetCurrentUser(User);
-            var userRole = await _authManager.GetUserRoleById(currentUser.Id);
-
-            return macroUserId == currentUser.Id || (userRole == "Admin");
-        }
-
-        #endregion
     }
 }

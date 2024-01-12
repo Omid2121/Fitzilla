@@ -16,6 +16,17 @@ namespace Fitzilla.DAL.Configurations.Entities
                 },
                 new IdentityRole
                 {
+                    Name = "Manager",
+                    NormalizedName = "MANAGER"
+                },
+                new IdentityRole
+                {
+                    Name = "Employee",
+                    NormalizedName = "EMPLOYEE"
+
+                },
+                new IdentityRole
+                {
                     Name = "Consumer",
                     NormalizedName = "CONSUMER"
                 }

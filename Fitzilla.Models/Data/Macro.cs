@@ -3,56 +3,28 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Fitzilla.Models.Data
 {
-    public class Macro : IEntity
+    public class Macro : EntityDetail
     {
-        public Guid Id { get; set; }
+        public decimal CurrentWeight { get; set; }
+        
+        public decimal GoalWeight { get; set; }
 
-        /// <summary>
-        /// Bulk, Cut, Maintenance
-        /// </summary>
-        public string Name { get; set; }
+        public DateTimeOffset CycleStartDate { get; set; }
+        
+        public DateTimeOffset CycleEndDate { get; set; }
 
-        /// <summary>
-        /// Calorie Maintenance, Calorie Surplus, Calorie Deficit
-        /// </summary>
         public ConsumeType ConsumeType { get; set; }
-
-        /// <summary>
-        /// Sedentary, Moderately active, Very active
-        /// </summary>
+        
         public Intensity Intensity { get; set; }
-
-        /// <summary>
-        /// Amount of calories
-        /// </summary>
+        
         public double Calorie { get; set; }
-
-        /// <summary>
-        /// Amount of protein
-        /// </summary>
+        
         public double Protein { get; set; }
-
-        /// <summary>
-        /// Amount of carbohydrates
-        /// </summary>
+        
         public double Carbohydrate { get; set; }
-
-        /// <summary>
-        /// Amount of fat
-        /// </summary>
+        
         public double Fat { get; set; }
-
-        /// <summary>
-        /// Macro's creation time.
-        /// </summary>
-        public DateTimeOffset CreationTime { get; set; }
-
-        /// <summary>
-        /// Macro's last modified time.
-        /// </summary>
-        public DateTimeOffset? LastModifiedTime { get; set; }
-
-        [ForeignKey(nameof(Creator))]
+        
         public string CreatorId { get; set; }
         public User Creator { get; set; }
     }

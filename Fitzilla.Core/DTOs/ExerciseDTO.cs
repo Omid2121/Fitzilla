@@ -1,16 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Fitzilla.DAL.DTOs
+namespace Fitzilla.BLL.DTOs
 {
     public class CreateExerciseDTO
     {
         [Required]
-        public string Name { get; set; }
+        public string Title { get; set; }
 
-        [Required]
-        public string Description { get; set; }
-        
-        public string Image { get; set; }
+        public string? Description { get; set; }
         
         [Required]
         public int Set { get; set; }
@@ -20,10 +17,10 @@ namespace Fitzilla.DAL.DTOs
         
         [Required]
         public double Weight { get; set; }
+        
+        public Guid MediaId { get; set; }
 
-        public DateTimeOffset CreationTime { get; set; }
-
-        public Guid? WorkoutId { get; set; }
+        public Guid? SessionId { get; set; }
 
         public string CreatorId { get; set; }
     }
@@ -31,16 +28,15 @@ namespace Fitzilla.DAL.DTOs
     public class ExerciseDTO : CreateExerciseDTO
     {
         public Guid Id { get; set; }
-
-        public DateTimeOffset? LastModifiedTime { get; set; }
-
-        public UserDTO Creator { get; set; }
         
-        public WorkoutDTO Workout { get; set; }
+        public string MediaTitle { get; set; }
+
+        public string CreatorEmail { get; set; }
+        
+        public string SessionTitle { get; set; }
     }
 
     public class UpdateExerciseDTO : CreateExerciseDTO
     {
-        public DateTimeOffset? LastModifiedTime { get; set; }
     }
 }

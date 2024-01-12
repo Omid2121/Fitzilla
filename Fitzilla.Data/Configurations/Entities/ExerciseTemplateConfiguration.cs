@@ -9,10 +9,17 @@ namespace Fitzilla.DAL.Configurations.Entities
     {
         public void Configure(EntityTypeBuilder<ExerciseTemplate> builder)
         {
+            // Required fields
             builder.Property(exerciseTemplate => exerciseTemplate.Id).IsRequired();
-            builder.Property(exerciseTemplate => exerciseTemplate.Name).IsRequired().HasMaxLength(50);
+            builder.Property(exerciseTemplate => exerciseTemplate.Title).IsRequired().HasMaxLength(40);
             builder.Property(exerciseTemplate => exerciseTemplate.Description).IsRequired();
 
+            // ExerciseTemplate has a many-to-one relationship with Image
+            builder.HasOne(exerciseTemplate => exerciseTemplate.Image)
+                .WithMany(image => image.ExerciseTemplates)
+                .HasForeignKey(exerciseTemplate => exerciseTemplate.ImageId);
+
+            // ExerciseTemplate has a many-to-one relationship with User
             builder.HasOne(exerciseTemplate => exerciseTemplate.Creator)
                 .WithMany(user => user.ExerciseTemplates)
                 .HasForeignKey(exerciseTemplate => exerciseTemplate.CreatorId);

@@ -1,18 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Fitzilla.DAL.DTOs
+namespace Fitzilla.BLL.DTOs
 {
     public class CreateExerciseTemplateDTO 
     { 
         [Required]
-        public string Name { get; set; }
+        public string Title { get; set; }
 
-        [Required]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
-        public string Image { get; set; }
-
-        public DateTimeOffset CreationTime { get; set; }
+        public Guid MediaId { get; set; }
 
         public string? CreatorId { get; set; }
     }
@@ -21,11 +18,12 @@ namespace Fitzilla.DAL.DTOs
     {
         public Guid Id { get; set; }
 
-        public UserDTO? Creator { get; set; }
+        public string? MediaTitle { get; set; }
+        
+        public string? CreatorEmail { get; set; }
     }
 
     public class UpdateExerciseTemplateDTO : CreateExerciseTemplateDTO
     {
-        public DateTimeOffset? LastModifiedTime { get; set; }
     }
 }

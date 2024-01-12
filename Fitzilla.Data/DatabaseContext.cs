@@ -10,8 +10,10 @@ namespace Fitzilla.DAL
         public DatabaseContext(DbContextOptions options) : base(options)
         { }
 
-        public DbSet<Macro> Macro { get; set; }
-        public DbSet<Workout> Workouts { get; set; }
+        public DbSet<Media> Medias { get; set; }
+        public DbSet<Macro> Macros { get; set; }
+        public DbSet<Session> Sessions { get; set; }
+        public DbSet<Plan> Plans { get; set; }
         public DbSet<Exercise> Exercises { get; set; }
         public DbSet<ExerciseTemplate> ExerciseTemplates { get; set; }
 
@@ -19,10 +21,12 @@ namespace Fitzilla.DAL
         {
             base.OnModelCreating(builder);
 
+            builder.ApplyConfiguration(new MediaConfiguration());
             builder.ApplyConfiguration(new ExerciseTemplateConfiguration());
             builder.ApplyConfiguration(new ExerciseConfiguration());
+            builder.ApplyConfiguration(new SessionConfiguration());
             builder.ApplyConfiguration(new MacroConfiguration());
-            builder.ApplyConfiguration(new WorkoutConfiguration());
+            builder.ApplyConfiguration(new PlanConfiguration());
             builder.ApplyConfiguration(new RoleConfiguration());
         }
     }

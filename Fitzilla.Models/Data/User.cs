@@ -15,11 +15,6 @@ namespace Fitzilla.Models.Data
         public string LastName { get; set; }
 
         /// <summary>
-        /// User's age calculated based on the user's birth
-        /// </summary>
-        public int Age { get => (int)Math.Floor(Convert.ToDecimal((DateTime.Now - Birth).TotalDays / 365.25)); }
-
-        /// <summary>
         /// User's birthdate
         /// </summary>
         public DateTime Birth { get; set; }
@@ -27,7 +22,7 @@ namespace Fitzilla.Models.Data
         /// <summary>
         /// User's gender
         /// </summary>
-        public string Gender { get; set; }
+        public Gender Gender { get; set; }
 
         /// <summary>
         /// User's weight
@@ -44,10 +39,11 @@ namespace Fitzilla.Models.Data
         /// </summary>
         public Measurement Measurement { get; set; }
 
-
         public virtual ICollection<ExerciseTemplate> ExerciseTemplates { get; set; }
         public virtual ICollection<Exercise> Exercises { get; set; }
         public virtual ICollection<Macro> Macros { get; set; }
-        public virtual ICollection<Workout> Workouts { get; set; }
+        public virtual ICollection<Session> Sessions { get; set; }
+        public virtual ICollection<Plan> Plans { get; set; }
+        public virtual ICollection<Media> Medias { get; set; }
     }
 }

@@ -13,17 +13,17 @@ using Xunit.Abstractions;
 
 namespace Fitzilla.Tests.Integration.Controllers
 {
-    public class WorkoutControllerTests : WebApiApplication
+    public class PlansControllerTests : WebApiApplication
     {
         private readonly HttpClient _client;
         private readonly ITestOutputHelper _testOutputHelper;
-        private List<Workout> Workouts { get; set; } = new();
+        private List<Plan> Workouts { get; set; } = new();
 
-        public WorkoutControllerTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+        public PlansControllerTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
             _client = new WebApiApplication(_testOutputHelper).CreateClient();
-            Workouts = WorkoutSeedData.Workouts();
+            Workouts = PlanSeedData.Workouts();
         }
 
         [Fact]
@@ -35,7 +35,7 @@ namespace Fitzilla.Tests.Integration.Controllers
             var response = await _client.GetAsync(HttpHelper.Urls.WorkoutURL);
             response.EnsureSuccessStatusCode();
 
-            var result = await response.Content.ReadFromJsonAsync<List<Workout>>();
+            var result = await response.Content.ReadFromJsonAsync<List<Plan>>();
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -44,7 +44,7 @@ namespace Fitzilla.Tests.Integration.Controllers
             result[0].Name.Should().Be(Workouts[0].Name);
             result[0].Description.Should().Be(Workouts[0].Description);
             result[0].TargetMuscle.Should().Be(Workouts[0].TargetMuscle);
-            result[0].CreationTime.Should().Be(Workouts[0].CreationTime);
+            result[0].CreatedAt.Should().Be(Workouts[0].CreatedAt);
             result[0].CreatorId.Should().Be(Workouts[0].CreatorId);
             result[0].Creator.Should().Be(Workouts[0].Creator);
         }
@@ -56,7 +56,7 @@ namespace Fitzilla.Tests.Integration.Controllers
 
             // Act
             var response = await _client.GetAsync($"{HttpHelper.Urls.WorkoutURL}{Workouts[0].Id}");
-            var result = await response.Content.ReadFromJsonAsync<Workout>();
+            var result = await response.Content.ReadFromJsonAsync<Plan>();
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -64,7 +64,7 @@ namespace Fitzilla.Tests.Integration.Controllers
             result.Name.Should().Be(Workouts[0].Name);
             result.Description.Should().Be(Workouts[0].Description);
             result.TargetMuscle.Should().Be(Workouts[0].TargetMuscle);
-            result.CreationTime.Should().Be(Workouts[0].CreationTime);
+            result.CreatedAt.Should().Be(Workouts[0].CreatedAt);
             result.CreatorId.Should().Be(Workouts[0].CreatorId);
             result.Creator.Should().Be(Workouts[0].Creator);
         }
@@ -99,7 +99,7 @@ namespace Fitzilla.Tests.Integration.Controllers
         public async Task CreateWorkout_WithInvalidWorkout_ReturnsBadRequest()
         {
             // Arrange
-            Workout invalidWorkout = new();
+            Plan invalidWorkout = new();
 
             // Act
             var content = new StringContent(JsonConvert.SerializeObject(invalidWorkout), Encoding.UTF8, "application/json");
@@ -113,14 +113,14 @@ namespace Fitzilla.Tests.Integration.Controllers
         public async Task UpdateWorkout_WithValidWorkout_ReturnsNoContent()
         {
             // Arrange
-            var updatedModel = new Workout()
+            var updatedModel = new Plan()
             {
                 Id = Workouts[0].Id,
                 Name = "Updated Workout",
                 Description = "Updated Workout description",
                 TargetMuscle = TargetedMuscle.BACK,
-                CreationTime = Workouts[0].CreationTime,
-                LastModifiedTime = DateTime.Now,
+                CreatedAt = Workouts[0].CreatedAt,
+                ModifiedAt = DateTime.Now,
                 CreatorId = Workouts[0].CreatorId,
                 Creator = Workouts[0].Creator,
                 Exercises = Workouts[0].Exercises
@@ -138,7 +138,7 @@ namespace Fitzilla.Tests.Integration.Controllers
         public async Task UpdateWorkout_WithInvalidWorkout_ReturnsBadRequest()
         {
             // Arrange
-            var updatedModel = new Workout() { Id = Guid.Empty };
+            var updatedModel = new Plan() { Id = Guid.Empty };
 
             // Act
             var content = new StringContent(JsonConvert.SerializeObject(updatedModel), Encoding.UTF8, "application/json");
@@ -179,7 +179,7 @@ namespace Fitzilla.Tests.Integration.Controllers
 
             // Act
             var response = await _client.GetAsync($"{HttpHelper.Urls.WorkoutURL}/search");
-            var result = await response.Content.ReadFromJsonAsync<List<Workout>>();
+            var result = await response.Content.ReadFromJsonAsync<List<Plan>>();
 
             // Assert
             response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -188,7 +188,7 @@ namespace Fitzilla.Tests.Integration.Controllers
             result[0].Name.Should().Be(Workouts[0].Name);
             result[0].Description.Should().Be(Workouts[0].Description);
             result[0].TargetMuscle.Should().Be(Workouts[0].TargetMuscle);
-            result[0].CreationTime.Should().Be(Workouts[0].CreationTime);
+            result[0].CreatedAt.Should().Be(Workouts[0].CreatedAt);
             result[0].CreatorId.Should().Be(Workouts[0].CreatorId);
             result[0].Creator.Should().Be(Workouts[0].Creator);
         }

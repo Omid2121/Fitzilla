@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Fitzilla.BLL.Services
 {
-    public class WorkoutManager
+    public class PlanManager
     {
     }
 }

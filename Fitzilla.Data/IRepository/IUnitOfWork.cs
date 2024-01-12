@@ -1,4 +1,5 @@
 ﻿using Fitzilla.DAL.Repository;
+using Fitzilla.Models.Data;
 
 namespace Fitzilla.DAL.IRepository
 {
@@ -6,7 +7,8 @@ namespace Fitzilla.DAL.IRepository
     {
         ExerciseRepository Exercises { get; }
         ExerciseTemplateRepository ExerciseTemplates { get; }
-        WorkoutRepository Workouts { get; }
+        SessionRepository Sessions { get; }
+        PlanRepository Plans { get; }
         MacroRepository Macros { get; }
         Task Save();
     }

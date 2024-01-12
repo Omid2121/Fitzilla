@@ -1,7 +1,8 @@
-﻿using Fitzilla.Models.Enums;
+﻿using Fitzilla.Models.Data;
+using Fitzilla.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace Fitzilla.DAL.DTOs
+namespace Fitzilla.BLL.DTOs
 {
     public class LoginUserDTO
     {
@@ -23,10 +24,6 @@ namespace Fitzilla.DAL.DTOs
         [Required]
         public string LastName { get; set; }
 
-        public string UserName { get; set; }
-
-        public int Age { get => (int)Math.Floor(Convert.ToDecimal((DateTime.Now - Birth).TotalDays / 365.25)); }
-
         [Required]
         public DateTime Birth { get; set; }
 
@@ -34,7 +31,7 @@ namespace Fitzilla.DAL.DTOs
         public string PhoneNumber { get; set; }
 
         [Required]
-        public string Gender { get; set; }
+        public Gender Gender { get; set; }
 
         [Required]
         public double Weight { get; set; }
@@ -43,8 +40,6 @@ namespace Fitzilla.DAL.DTOs
         public double Height { get; set; }
 
         public Measurement Measurement { get; set; }
-
-        public ICollection<string> Roles { get; set; }
     }
 
     public class UserDTO : CreateUserDTO
@@ -54,7 +49,9 @@ namespace Fitzilla.DAL.DTOs
         public virtual IList<ExerciseTemplateDTO> ExerciseTemplates { get; set; }
         public virtual IList<ExerciseDTO> Exercises { get; set; }
         public virtual IList<MacroDTO> Macros { get; set; }
-        public virtual IList<WorkoutDTO> Workouts { get; set; }
+        public virtual ICollection<SessionDTO> Sessions { get; set; }
+        public virtual IList<PlanDTO> Plans { get; set; }
+        public virtual IList<MediaDTO> Images { get; set; }
     }
 
     public class LoginResponseDTO
@@ -64,8 +61,28 @@ namespace Fitzilla.DAL.DTOs
         public UserDTO User { get; set; }
     }
 
-    public class UpdateUserDTO : CreateUserDTO
-    { }
+    public class UpdateUserDTO
+    {
+        public string FirstName { get; set; }
+
+        public string LastName { get; set; }
+
+        public DateTime Birth { get; set; }
+
+        [DataType(DataType.PhoneNumber)]
+        public string PhoneNumber { get; set; }
+        
+        [Required]
+        public Gender Gender { get; set; }
+
+        [Required]
+        public double Weight { get; set; }
+
+        [Required]
+        public double Height { get; set; }
+
+        public Measurement Measurement { get; set; }
+    }
 
     public class DeleteUserDTO : LoginUserDTO
     { }

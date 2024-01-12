@@ -8,23 +8,24 @@ using System.Threading.Tasks;
 
 namespace Fitzilla.DAL.Configurations.SeedData
 {
-    public static class WorkoutSeedData
+    public static class PlanSeedData
     {
-        public static List<Workout> Workouts()
+        public static List<Plan> Plans()
         {
             User? user = UserSeedData.Users().FirstOrDefault();
-            return new List<Workout>()
+            return new List<Plan>()
             {
-                new Workout
+                new Plan
                 {
                     Id = Guid.NewGuid(),
-                    Name = "Test Workout",
+                    Title = "Test Workout",
                     Description = "Workout description",
-                    TargetMuscle = TargetedMuscle.QUADS,
-                    CreationTime = DateTime.Now,
+                    SessionsPerWeek = 3,
+                    DurationInWeeks = 4,
+                    CreatedAt = DateTime.Now,
                     CreatorId = user.Id,
                     Creator = user,
-                    Exercises = ExerciseSeedData.Exercises()
+                    Sessions = SessionSeedData.Sessions()
                 }
             };
         }

@@ -18,14 +18,14 @@ namespace Fitzilla.Tests.Integration.Repositories
             return new Exercise()
             {
                 Id = Guid.NewGuid(),
-                Name = "Test Exercise",
+                Title = "Test Exercise",
                 Description = "Test Description",
                 Image = "image.png",
                 Set = 3,
                 Rep = 10,
                 Weight = 60,
-                CreationTime = DateTime.Now,
-                LastModifiedTime = DateTime.Now,
+                CreatedAt = DateTime.Now,
+                ModifiedAt = DateTime.Now,
                 CreatorId = Guid.NewGuid().ToString(),
                 Creator = new User()
                 {

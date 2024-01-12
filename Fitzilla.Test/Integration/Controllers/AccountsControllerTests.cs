@@ -12,13 +12,13 @@ using Xunit.Abstractions;
 
 namespace Fitzilla.Tests.Integration.Controllers
 {
-    public class AccountControllerTests : WebApiApplication
+    public class AccountsControllerTests : WebApiApplication
     {
         private readonly HttpClient _client;
         private readonly ITestOutputHelper _testOutputHelper;
         private List<User> Users { get; set; } = new();
 
-        public AccountControllerTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+        public AccountsControllerTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
         {
             _testOutputHelper = testOutputHelper;
             _client = new WebApiApplication(_testOutputHelper).CreateClient();

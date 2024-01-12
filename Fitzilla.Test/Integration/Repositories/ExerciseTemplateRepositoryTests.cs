@@ -17,10 +17,10 @@ namespace Fitzilla.Tests.Integration.Repositories
             return new ExerciseTemplate
             {
                 Id = Guid.NewGuid(),
-                Name = "New ExerciseTemplate",
+                Title = "New ExerciseTemplate",
                 Description = "Test for new ExerciseTemplate",
                 Image = "image.png",
-                CreationTime = DateTime.Now,
+                CreatedAt = DateTime.Now,
             };
         }
     }

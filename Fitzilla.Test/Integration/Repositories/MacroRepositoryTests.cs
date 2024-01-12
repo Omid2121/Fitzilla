@@ -18,14 +18,14 @@ namespace Fitzilla.Tests.Integration.Repositories
             return new Macro
             {
                 Id = Guid.NewGuid(),
-                Name = "New Macro",
+                Title = "New Macro",
                 ConsumeType = ConsumeType.SURPLUS,
                 Intensity = Intensity.LIGHTLY_ACTIVE,
                 Calorie = 3000,
                 Protein = 50,
                 Carbohydrate = 200,
                 Fat = 80,
-                CreationTime = DateTime.Now,
+                CreatedAt = DateTime.Now,
                 CreatorId = Guid.NewGuid().ToString(),
                 Creator = new User()
                 {
