@@ -6,6 +6,7 @@ using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Numerics;
 using System.Security.Claims;
 
 namespace Fitzilla.API.Controllers
@@ -59,16 +60,15 @@ namespace Fitzilla.API.Controllers
         {
             if (!ModelState.IsValid) return BadRequest($"Invalid payload. {ModelState}");
 
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var session = _mapper.Map<Session>(sessionDTO);
-            session.CreatorId = currentUserId;
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (session.CreatorId != currentUserId) return Forbid("You are not authorized to create this session.");
+            //session.CreatorId = currentUserId;
 
             await _unitOfWork.Sessions.Insert(session);
             await _unitOfWork.Save();
 
-            var result = _mapper.Map<SessionDTO>(session);
-
-            return CreatedAtRoute("GetSession", new { sessionId = result.Id }, result);
+            return CreatedAtRoute("GetSession", new { sessionId = session.Id }, session);
         }
 
         [HttpPut("{sessionId}")]

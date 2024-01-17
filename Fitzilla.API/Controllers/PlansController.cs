@@ -3,10 +3,12 @@ using Fitzilla.BLL.DTOs;
 using Fitzilla.BLL.Services;
 using Fitzilla.DAL.IRepository;
 using Fitzilla.DAL.Models;
+using Fitzilla.Models;
 using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
+using System.Security.Claims;
 
 namespace Fitzilla.API.Controllers
 {
@@ -43,7 +45,7 @@ namespace Fitzilla.API.Controllers
         }
 
         [Authorize(Roles = "Admin,Consumer")]
-        [HttpGet("{id}", Name = "GetPlan")]
+        [HttpGet("{planId}", Name = "GetPlan")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<IActionResult> GetPlan(Guid id)
         {
@@ -60,14 +62,19 @@ namespace Fitzilla.API.Controllers
         [Authorize(Roles = "Admin,Consumer")]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreatePlan([FromBody] CreatePlanDTO planDTO)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var currentUser = await _authManager.GetCurrentUser(User);
-            if (planDTO.CreatorId != currentUser.Id) return BadRequest("Ids doesn't match");
+            if (!ModelState.IsValid) return BadRequest($"Invalid payload. {ModelState}");
 
             var plan = _mapper.Map<Plan>(planDTO);
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (plan.CreatorId != currentUserId) return Forbid("You are not authorized to create this plan.");
+
+            if (plan.SessionsPerWeek < 1 || plan.SessionsPerWeek > 7) return BadRequest("SessionsPerWeek must be between 1 and 7.");
+            if (plan.DurationInWeeks < 1 || plan.DurationInWeeks > 52) return BadRequest("DurationInWeeks must be between 1 and 52.");
+
             await _unitOfWork.Plans.Insert(plan);
             await _unitOfWork.Save();
 
@@ -75,26 +82,37 @@ namespace Fitzilla.API.Controllers
         }
 
         [Authorize(Roles = "Admin,Consumer")]
-        [HttpPut("{id}")]
+        [HttpPut("{planId}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdatePlan(Guid id, [FromBody] UpdatePlanDTO planDTO)
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdatePlan(Guid planId, [FromBody] UpdatePlanDTO planDTO)
         {
-            if (!ModelState.IsValid || id == Guid.Empty) return BadRequest(ModelState);
+            if (!ModelState.IsValid || planId == Guid.Empty) return BadRequest($"Invalid payload. {ModelState}");
 
-            var plan = await _unitOfWork.Plans.Get(w => w.Id.Equals(id));
-            if (plan == null) return BadRequest("Submitted data is invalid.");
-
-            if (!await IsAuthorized(plan.CreatorId)) return Forbid();
-
-            _mapper.Map(planDTO, plan);
-            _unitOfWork.Plans.Update(plan);
+            var userRoles = User.FindAll(ClaimTypes.Role);
+            if (userRoles.Any(c => c.Value == Role.Admin))
+            {
+                var plan = await _unitOfWork.Plans.Get(w => w.Id.Equals(planId));
+                if (plan == null) return NotFound($"Plan with id {planId} not found.");
+                _mapper.Map(planDTO, plan);
+                _unitOfWork.Plans.Update(plan);
+            }
+            else
+            {
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var plan = await _unitOfWork.Plans.Get(w => w.Id.Equals(planId) && w.CreatorId == currentUserId);
+                if (plan == null) return NotFound($"Plan with id {planId} not found.");
+                _mapper.Map(planDTO, plan);
+                _unitOfWork.Plans.Update(plan);
+            }
             await _unitOfWork.Save();
 
             return NoContent();
         }
 
         [Authorize(Roles = "Admin,Consumer")]
-        [HttpDelete("{id}")]
+        [HttpDelete("{planId}")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         public async Task<IActionResult> DeletePlan(Guid id)
         {

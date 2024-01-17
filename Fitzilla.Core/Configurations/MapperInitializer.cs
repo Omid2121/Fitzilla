@@ -16,17 +16,9 @@ namespace Fitzilla.BLL.Configurations
             CreateMap<ExerciseTemplate, CreateExerciseTemplateDTO>().ReverseMap();
             CreateMap<ExerciseTemplate, UpdateExerciseTemplateDTO>().ReverseMap();
 
-            CreateMap<EntityDetail, EntityDetailDTO>().ReverseMap();
-            CreateMap<EntityDetail, CreateEntityDetailDTO>().ReverseMap();
-            CreateMap<EntityDetail, UpdateEntityDetailDTO>().ReverseMap();
-
-            CreateMap<RecordLog, RecordLogDTO>().ReverseMap();
-            CreateMap<RecordLog, CreateRecordLogDTO>().ReverseMap();
-            CreateMap<RecordLog, UpdateRecordLogDTO>().ReverseMap();
-
             CreateMap<Media, MediaDTO>().ReverseMap();
-            CreateMap<Media, CreateImageDTO>().ReverseMap();
-            CreateMap<Media, UpdateImageDTO>().ReverseMap();
+            CreateMap<Media, CreateMediaDTO>().ReverseMap();
+            CreateMap<Media, UpdateMediaDTO>().ReverseMap();
 
             CreateMap<Session, SessionDTO>().ReverseMap();
             CreateMap<Session, CreateSessionDTO>().ReverseMap();

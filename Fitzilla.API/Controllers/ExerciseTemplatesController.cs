@@ -16,13 +16,13 @@ namespace Fitzilla.API.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly IAuthManager _authManager;
+        private readonly IBlobRepository _blobRepository;
 
-        public ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager)
+        public ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper, IBlobRepository blobRepository)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _authManager = authManager;
+            _blobRepository = blobRepository;
         }
 
 

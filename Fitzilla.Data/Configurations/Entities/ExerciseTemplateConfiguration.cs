@@ -13,11 +13,12 @@ namespace Fitzilla.DAL.Configurations.Entities
             builder.Property(exerciseTemplate => exerciseTemplate.Id).IsRequired();
             builder.Property(exerciseTemplate => exerciseTemplate.Title).IsRequired().HasMaxLength(40);
             builder.Property(exerciseTemplate => exerciseTemplate.Description).IsRequired();
+            builder.Property(exerciseTemplate => exerciseTemplate.MediaId).IsRequired();
 
             // ExerciseTemplate has a many-to-one relationship with Image
-            builder.HasOne(exerciseTemplate => exerciseTemplate.Image)
+            builder.HasOne(exerciseTemplate => exerciseTemplate.Media)
                 .WithMany(image => image.ExerciseTemplates)
-                .HasForeignKey(exerciseTemplate => exerciseTemplate.ImageId);
+                .HasForeignKey(exerciseTemplate => exerciseTemplate.MediaId);
 
             // ExerciseTemplate has a many-to-one relationship with User
             builder.HasOne(exerciseTemplate => exerciseTemplate.Creator)

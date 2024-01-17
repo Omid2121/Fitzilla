@@ -16,13 +16,13 @@ namespace Fitzilla.API.Controllers
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
-        private readonly IAuthManager _authManager;
+        private readonly IBlobRepository _blobRepository;
 
-        public ExercisesController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager)
+        public ExercisesController(IUnitOfWork unitOfWork, IMapper mapper, IBlobRepository blobRepository)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
-            _authManager = authManager;
+            _blobRepository = blobRepository;
         }
 
         [Authorize(Roles = "Admin,Consumer")]
@@ -50,7 +50,7 @@ namespace Fitzilla.API.Controllers
         {
             if (id == Guid.Empty) return BadRequest();
             
-            var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(id), new List<string> { "Plan" });
+            var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(id), new List<string> { "Session" });
 
             if (!await IsAuthorized(exercise.CreatorId)) return Forbid();
 

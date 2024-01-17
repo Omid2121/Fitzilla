@@ -15,13 +15,13 @@ namespace Fitzilla.DAL.Configurations.Entities
             builder.Property(exercise => exercise.Set).IsRequired();
             builder.Property(exercise => exercise.Rep).IsRequired();
             builder.Property(exercise => exercise.Weight).IsRequired();
-            builder.Property(exercise => exercise.ImageId).IsRequired();
+            builder.Property(exercise => exercise.MediaId).IsRequired();
             builder.Property(exercise => exercise.CreatorId).IsRequired();
 
             // Exercise has a many-to-one relationship with Image
-            builder.HasOne(exercise => exercise.Image)
+            builder.HasOne(exercise => exercise.Media)
                 .WithMany(image => image.Exercises)
-                .HasForeignKey(exercise => exercise.ImageId);
+                .HasForeignKey(exercise => exercise.MediaId);
 
             // Exercise has a many-to-one relationship with Session
             builder.HasOne(exercise => exercise.Session)

@@ -1,4 +1,5 @@
 using AspNetCoreRateLimit;
+using Azure.Storage.Blobs;
 using Fitzilla.BLL;
 using Fitzilla.BLL.Services;
 using Fitzilla.DAL;
@@ -30,7 +31,6 @@ public class Program
         builder.Services.ConfigureIdentity();
         builder.Services.ConfigureJWT(builder.Configuration);
 
-
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowEverything", builder =>
@@ -40,6 +40,10 @@ public class Program
         });
 
         builder.Services.ConfigureAutoMapper();
+
+        builder.Services.AddSingleton(x => new BlobServiceClient(builder.Configuration.GetConnectionString("AzureBlobStorageConnection")));
+
+        builder.Services.AddScoped<IBlobRepository, BlobRepository>();
 
         builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
         builder.Services.AddScoped<IAuthManager, AuthManager>();
