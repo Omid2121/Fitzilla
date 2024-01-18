@@ -5,12 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Fitzilla.DAL.Repository
+namespace Fitzilla.DAL.Repository;
+
+public class SessionRepository : GenericRepository<Session>
 {
-    public class SessionRepository : GenericRepository<Session>
+    public SessionRepository(DatabaseContext context) : base(context)
     {
-        public SessionRepository(DatabaseContext context) : base(context)
-        {
-        }
     }
 }

@@ -14,108 +14,107 @@ using Microsoft.IdentityModel.Tokens;
 using System.Reflection;
 using System.Text;
 
-namespace Fitzilla.BLL
+namespace Fitzilla.BLL;
+
+public static class ServiceExtensions
 {
-    public static class ServiceExtensions
+    public static void ConfigureIdentity(this IServiceCollection services)
     {
-        public static void ConfigureIdentity(this IServiceCollection services)
+        var builder = services.AddIdentityCore<User>(q =>
         {
-            var builder = services.AddIdentityCore<User>(q =>
+            q.User.RequireUniqueEmail = true;
+        });
+        builder = new IdentityBuilder(builder.UserType, typeof(IdentityRole), services);
+        builder.AddTokenProvider("FitzillaApi", typeof(DataProtectorTokenProvider<User>));
+        builder.AddEntityFrameworkStores<DatabaseContext>().AddDefaultTokenProviders();
+    }
+
+    public static void ConfigureAutoMapper(this IServiceCollection services)
+    {
+        services.AddAutoMapper(Assembly.GetExecutingAssembly());
+    }
+
+    public static void ConfigureJWT(this IServiceCollection services, IConfiguration configuration)
+    {
+        var jwtSettings = configuration.GetSection("Jwt");
+        var key = Environment.GetEnvironmentVariable("KEY");
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
             {
-                q.User.RequireUniqueEmail = true;
-            });
-            builder = new IdentityBuilder(builder.UserType, typeof(IdentityRole), services);
-            builder.AddTokenProvider("FitzillaApi", typeof(DataProtectorTokenProvider<User>));
-            builder.AddEntityFrameworkStores<DatabaseContext>().AddDefaultTokenProviders();
-        }
-
-        public static void ConfigureAutoMapper(this IServiceCollection services)
-        {
-            services.AddAutoMapper(Assembly.GetExecutingAssembly());
-        }
-
-        public static void ConfigureJWT(this IServiceCollection services, IConfiguration configuration)
-        {
-            var jwtSettings = configuration.GetSection("Jwt");
-            var key = Environment.GetEnvironmentVariable("KEY");
-
-            services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,              // the server that created the token
-                    ValidateLifetime = true,            // the token is valid for a certain amount of time
-                    ValidateAudience = true,            // the recipient of the token is authorized to receive it
-                    ValidateIssuerSigningKey = true,    // the server that created the signing key is trusted
-                    ValidAudience = jwtSettings.GetSection("Audience").Value,   // the audience is authorized to receive it
-                    ValidIssuer = jwtSettings.GetSection("Issuer").Value,   // the audience is authorized to receive it
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),   // the signing key is used to verify the identity of the issuer
-                    ClockSkew = TimeSpan.Zero           // the clock skew between the server and client
-                };
-            });
-        }
-
-        public static void ConfigureExceptionHandler(this IApplicationBuilder app)
-        {
-            app.UseExceptionHandler(error =>
-            {
-                error.Run(async context =>
-                {
-                    context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                    context.Response.ContentType = "application/json";
-                    var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
-                    if (contextFeature != null)
-                    {
-                        await context.Response.WriteAsync(new Error
-                        {
-                            StatusCode = context.Response.StatusCode,
-                            Message = "Internal Server Error. Please Try Again Later."
-                        }.ToString());
-                    }
-                });
-            });
-        }
-
-        public static void ConfigureHttpCacheHeaders(this IServiceCollection services)
-        {
-            services.AddResponseCaching();
-            services.AddHttpCacheHeaders(
-                (expirationOpt) =>
-                {
-                    expirationOpt.MaxAge = 1200;
-                    expirationOpt.CacheLocation = CacheLocation.Public;
-                },
-                (validationOpt) =>
-                {
-                    validationOpt.MustRevalidate = true;
-                }
-            );
-        }
-
-        public static void ConfigureRateLimiting(this IServiceCollection services)
-        {
-            var rateLimitRules = new List<RateLimitRule>
-            {
-                new RateLimitRule
-                {
-                    Endpoint = "*",
-                    Limit = 30,
-                    Period = "5m"
-                }
+                ValidateIssuer = true,              // the server that created the token
+                ValidateLifetime = true,            // the token is valid for a certain amount of time
+                ValidateAudience = true,            // the recipient of the token is authorized to receive it
+                ValidateIssuerSigningKey = true,    // the server that created the signing key is trusted
+                ValidAudience = jwtSettings.GetSection("Audience").Value,   // the audience is authorized to receive it
+                ValidIssuer = jwtSettings.GetSection("Issuer").Value,   // the audience is authorized to receive it
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),   // the signing key is used to verify the identity of the issuer
+                ClockSkew = TimeSpan.Zero           // the clock skew between the server and client
             };
-            services.Configure<IpRateLimitOptions>(opt =>
+        });
+    }
+
+    public static void ConfigureExceptionHandler(this IApplicationBuilder app)
+    {
+        app.UseExceptionHandler(error =>
+        {
+            error.Run(async context =>
             {
-                opt.GeneralRules = rateLimitRules;
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                context.Response.ContentType = "application/json";
+                var contextFeature = context.Features.Get<IExceptionHandlerFeature>();
+                if (contextFeature != null)
+                {
+                    await context.Response.WriteAsync(new Error
+                    {
+                        StatusCode = context.Response.StatusCode,
+                        Message = "Internal Server Error. Please Try Again Later."
+                    }.ToString());
+                }
             });
-            services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
-            services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
-            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
-            services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
-        }
+        });
+    }
+
+    public static void ConfigureHttpCacheHeaders(this IServiceCollection services)
+    {
+        services.AddResponseCaching();
+        services.AddHttpCacheHeaders(
+            (expirationOpt) =>
+            {
+                expirationOpt.MaxAge = 1200;
+                expirationOpt.CacheLocation = CacheLocation.Public;
+            },
+            (validationOpt) =>
+            {
+                validationOpt.MustRevalidate = true;
+            }
+        );
+    }
+
+    public static void ConfigureRateLimiting(this IServiceCollection services)
+    {
+        var rateLimitRules = new List<RateLimitRule>
+        {
+            new RateLimitRule
+            {
+                Endpoint = "*",
+                Limit = 30,
+                Period = "5m"
+            }
+        };
+        services.Configure<IpRateLimitOptions>(opt =>
+        {
+            opt.GeneralRules = rateLimitRules;
+        });
+        services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+        services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+        services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+        services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
     }
 }

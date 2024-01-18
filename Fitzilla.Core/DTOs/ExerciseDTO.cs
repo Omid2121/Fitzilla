@@ -1,42 +1,41 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Fitzilla.BLL.DTOs
+namespace Fitzilla.BLL.DTOs;
+
+public class CreateExerciseDTO
 {
-    public class CreateExerciseDTO
-    {
-        [Required]
-        public string Title { get; set; }
+    [Required]
+    public string Title { get; set; }
 
-        public string? Description { get; set; }
-        
-        [Required]
-        public int Set { get; set; }
+    public string? Description { get; set; }
+    
+    [Required]
+    public int Set { get; set; }
 
-        [Required]
-        public int Rep { get; set; }
-        
-        [Required]
-        public double Weight { get; set; }
-        
-        public Guid MediaId { get; set; }
+    [Required]
+    public int Rep { get; set; }
+    
+    [Required]
+    public double Weight { get; set; }
+    
+    public Guid MediaId { get; set; }
 
-        public Guid? SessionId { get; set; }
+    public Guid? SessionId { get; set; }
 
-        public string CreatorId { get; set; }
-    }
+    public string CreatorId { get; set; }
+}
 
-    public class ExerciseDTO : CreateExerciseDTO
-    {
-        public Guid Id { get; set; }
-        
-        public string MediaTitle { get; set; }
+public class ExerciseDTO : CreateExerciseDTO
+{
+    public Guid Id { get; set; }
+    
+    public string MediaTitle { get; set; }
 
-        public string CreatorEmail { get; set; }
-        
-        public string SessionTitle { get; set; }
-    }
+    public string CreatorEmail { get; set; }
+    
+    public string SessionTitle { get; set; }
+}
 
-    public class UpdateExerciseDTO : CreateExerciseDTO
-    {
-    }
+public class UpdateExerciseDTO : CreateExerciseDTO
+{
 }

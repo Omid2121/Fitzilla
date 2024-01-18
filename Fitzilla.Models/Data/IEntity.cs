@@ -1,7 +1,6 @@
-﻿namespace Fitzilla.Models.Data
+﻿namespace Fitzilla.Models.Data;
+
+public interface IEntity
 {
-    public interface IEntity
-    {
-        Guid Id { get; set; }
-    }
+    Guid Id { get; set; }
 }

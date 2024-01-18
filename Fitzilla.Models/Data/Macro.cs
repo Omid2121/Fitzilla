@@ -1,31 +1,30 @@
 ﻿using Fitzilla.Models.Enums;
-using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Fitzilla.Models.Data
-{
-    public class Macro : EntityDetail
-    {
-        public decimal CurrentWeight { get; set; }
-        
-        public decimal GoalWeight { get; set; }
+namespace Fitzilla.Models.Data;
 
-        public DateTimeOffset CycleStartDate { get; set; }
-        
-        public DateTimeOffset CycleEndDate { get; set; }
+public class Macro : EntityDetail
+{    
+    public double GoalWeight { get; set; }
 
-        public ConsumeType ConsumeType { get; set; }
-        
-        public Intensity Intensity { get; set; }
-        
-        public double Calorie { get; set; }
-        
-        public double Protein { get; set; }
-        
-        public double Carbohydrate { get; set; }
-        
-        public double Fat { get; set; }
-        
-        public string CreatorId { get; set; }
-        public User Creator { get; set; }
-    }
+    public DateTimeOffset CycleStartDate { get; set; }
+    
+    public DateTimeOffset CycleEndDate { get; set; }
+
+    public GoalType GoalType { get; set; }
+    
+    public ActivityLevel ActivityLevel { get; set; }
+    
+    public double Calorie { get; set; }
+
+    public double ProteinAmount { get; set; }
+    public int ProteinPercentage { get; set; }
+    
+    public double CarbohydrateAmount { get; set; }
+    public int CarbohydratePercentage { get; set; }
+    
+    public double FatAmount { get; set; }
+    public int FatPercentage { get; set; }
+    
+    public string CreatorId { get; set; }
+    public User Creator { get; set; }
 }

@@ -126,8 +126,8 @@ namespace Fitzilla.Tests.Integration.Controllers
             Macro updatedModel = new()
             {
                 Id = Macros[0].Id,
-                ConsumeType = ConsumeType.DEFICIT,
-                Intensity = Intensity.VERY_ACTIVE,
+                ConsumeType = GoalType.DEFICIT,
+                Intensity = ActivityLevel.VERY_ACTIVE,
                 Calorie = 2000,
                 Protein = 200,
                 Carbohydrate = 200,

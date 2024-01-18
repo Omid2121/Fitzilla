@@ -1,11 +1,10 @@
 ﻿using Fitzilla.Models.Data;
 
-namespace Fitzilla.DAL.Repository
+namespace Fitzilla.DAL.Repository;
+
+public class MacroRepository : GenericRepository<Macro>
 {
-    public class MacroRepository : GenericRepository<Macro>
+    public MacroRepository(DatabaseContext context) : base(context)
     {
-        public MacroRepository(DatabaseContext context) : base(context)
-        {
-        }
     }
 }

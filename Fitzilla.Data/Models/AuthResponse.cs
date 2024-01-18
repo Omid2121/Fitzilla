@@ -1,8 +1,7 @@
-﻿namespace Fitzilla.DAL.Models
+﻿namespace Fitzilla.DAL.Models;
+
+public class AuthResponse
 {
-    public class AuthResponse
-    {
-        public string Token { get; set; }
-        public string RefreshToken { get; set; }
-    }
+    public string Token { get; set; }
+    public string RefreshToken { get; set; }
 }

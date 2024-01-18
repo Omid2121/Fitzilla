@@ -1,11 +1,10 @@
 ﻿using Fitzilla.Models.Data;
 
-namespace Fitzilla.DAL.Repository
+namespace Fitzilla.DAL.Repository;
+
+public class PlanRepository : GenericRepository<Plan>
 {
-    public class PlanRepository : GenericRepository<Plan>
+    public PlanRepository(DatabaseContext context) : base(context)
     {
-        public PlanRepository(DatabaseContext context) : base(context)
-        {
-        }
     }
 }

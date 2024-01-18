@@ -1,44 +1,46 @@
 ﻿using Fitzilla.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace Fitzilla.BLL.DTOs
+namespace Fitzilla.BLL.DTOs;
+
+public class CreateMacroDTO
 {
-    public class CreateMacroDTO
-    {
-        [Required]
-        public string Title { get; set; }
-        
-        public string? Description { get; set; }
+    [Required]
+    public string Title { get; set; }
+    
+    public string? Description { get; set; }
 
-        [Required]
-        public ConsumeType ConsumeType { get; set; }
+    public double GoalWeight { get; set; }
 
-        [Required]
-        public Intensity Intensity { get; set; }
+    public DateTimeOffset CycleStartDate { get; set; }
 
-        [Required]
-        public double Calories { get; set; }
+    public DateTimeOffset CycleEndDate { get; set; }
 
-        [Required]
-        public double Protein { get; set; }
+    [Required]
+    public GoalType GoalType { get; set; }
 
-        [Required]
-        public double Carbohydrates { get; set; }
+    [Required]
+    public ActivityLevel ActivityLevel { get; set; }
 
-        [Required]
-        public double Fat { get; set; }
+    [Required]
+    public double ProteinPercentage { get; set; }
 
-        [Required]
-        public string CreatorId { get; set; }
-    }
-    public class MacroDTO : CreateMacroDTO
-    {
-        public Guid Id { get; set; }
+    [Required]
+    public double CarbohydratePercentage { get; set; }
 
-        public string CreatorEmail { get; set; }
-    }
+    [Required]
+    public double FatPercentage { get; set; }
 
-    public class UpdateMacroDTO : CreateMacroDTO
-    {
-    }
+    [Required]
+    public string CreatorId { get; set; }
+}
+public class MacroDTO : CreateMacroDTO
+{
+    public Guid Id { get; set; }
+
+    public string CreatorEmail { get; set; }
+}
+
+public class UpdateMacroDTO : CreateMacroDTO
+{
 }

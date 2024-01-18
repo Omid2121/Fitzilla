@@ -33,7 +33,7 @@ namespace Fitzilla.Tests.Integration.Repositories
                     FirstName = "Test",
                     LastName = "User",
                     Email = "",
-                    Birth = DateTime.Now,
+                    DateOfBirth = DateTime.Now,
                     Gender = "Male",
                     Weight = 60, 
                     Height = 160,

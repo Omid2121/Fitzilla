@@ -110,7 +110,7 @@ namespace Fitzilla.Tests.Integration.Controllers
                 LastName = "Updated Last name",
                 Email = Users[0].Email,
                 PasswordHash = Users[0].PasswordHash,
-                Birth = Users[0].Birth,
+                DateOfBirth = Users[0].DateOfBirth,
                 Gender = "Male",
                 Weight = 88,
                 Height = 188,

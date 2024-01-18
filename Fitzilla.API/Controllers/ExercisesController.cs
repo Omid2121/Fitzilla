@@ -1,147 +1,175 @@
 ﻿using AutoMapper;
 using Fitzilla.BLL.DTOs;
-using Fitzilla.BLL.Services;
 using Fitzilla.DAL.IRepository;
-using Fitzilla.DAL.Models;
+using Fitzilla.Models;
 using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
-namespace Fitzilla.API.Controllers
+namespace Fitzilla.API.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+public class ExercisesController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public class ExercisesController : ControllerBase
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+
+    public ExercisesController(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly IMapper _mapper;
-        private readonly IAuthManager _authManager;
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+    }
 
-        public ExercisesController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager)
+    [Authorize(Roles = "Admin,Consumer")]
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetExercises()
+    {
+        IList<Exercise> exercises;
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        if (userRoles.Any(ur => ur.Value == Role.Admin))
         {
-            _unitOfWork = unitOfWork;
-            _mapper = mapper;
-            _authManager = authManager;
+            exercises = await _unitOfWork.Exercises.GetAll();
         }
-
-        [Authorize(Roles = "Admin,Consumer")]
-        [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetExercises([FromQuery] RequestParams requestParams)
+        else
         {
-            IEnumerable<Exercise> exercises = await _unitOfWork.Exercises.GetPagedList(requestParams);
-            var currentUser = await _authManager.GetCurrentUser(User);
-            var userRole = await _authManager.GetUserRoleById(currentUser.Id);
-
-            if (userRole != "Admin")
-            {
-                exercises = exercises.Where(e => e.CreatorId == currentUser.Id);
-            }
-            var result = _mapper.Map<IList<ExerciseDTO>>(exercises);
-
-            return Ok(result);
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            exercises = await _unitOfWork.Exercises.GetAll(e => e.CreatorId == currentUserId);
         }
+        var results = _mapper.Map<IList<ExerciseDTO>>(exercises);
 
-        [Authorize(Roles = "Admin,Consumer")]
-        [HttpGet("{id}", Name = "GetExercise")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetExercise(Guid id)
+        return Ok(results);
+    }
+
+    [Authorize(Roles = "Admin,Consumer")]
+    [HttpGet("{exerciseId}", Name = "GetExercise")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> GetExercise(Guid exerciseId)
+    {
+        if (exerciseId == Guid.Empty) return BadRequest("Submitted data is invalid.");
+
+        Exercise exercise;
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        if (userRoles.Any(ur => ur.Value == Role.Admin))
         {
-            if (id == Guid.Empty) return BadRequest();
-            
-            var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(id), new List<string> { "Plan" });
-
-            if (!await IsAuthorized(exercise.CreatorId)) return Forbid();
-
-            var result = _mapper.Map<ExerciseDTO>(exercise);
-            
-            return Ok(result);
+            exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(exerciseId));
         }
-
-        [Authorize(Roles = "Admin,Consumer")]
-        [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        public async Task<IActionResult> CreateExercise([FromBody] CreateExerciseDTO exerciseDTO)
+        else
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            //if (!await ExerciseTypeExists(exerciseDTO.ExerciseTypeId))
-            //    return BadRequest("Submitted data is invalid.");
-
-            var currentUser = await _authManager.GetCurrentUser(User);
-            if (exerciseDTO.CreatorId != currentUser.Id) return BadRequest("Ids doesn't match");
-
-            var exercise = _mapper.Map<Exercise>(exerciseDTO);
-            await _unitOfWork.Exercises.Insert(exercise);
-            await _unitOfWork.Save();
-
-            return CreatedAtRoute("GetExercise", new { id = exercise.Id }, exercise);
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            exercise = await _unitOfWork.Exercises.Get(
+                e => e.CreatorId == currentUserId && e.Id.Equals(exerciseId), new List<string> { "Session", "Media" });
         }
+        var result = _mapper.Map<ExerciseDTO>(exercise);
 
-        [HttpPut("{id}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> UpdateExercise(Guid id, [FromBody] UpdateExerciseDTO exerciseDTO)
+        return Ok(result);
+    }
+
+    [Authorize(Roles = "Admin,Consumer")]
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateExercise([FromBody] CreateExerciseDTO exerciseDTO)
+    {
+        if (!ModelState.IsValid) return BadRequest($"Invalid payload: {ModelState}");
+
+        var exercise = _mapper.Map<Exercise>(exerciseDTO);
+
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (exercise.CreatorId != currentUserId) return Forbid("You are not authorized to create this exercise.");
+        await _unitOfWork.Exercises.Insert(exercise);
+        await _unitOfWork.Save();
+
+        return CreatedAtRoute("GetExercise", new { exerciseId = exercise.Id }, exercise);
+    }
+
+    [HttpPut("{exerciseId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> UpdateExercise(Guid exerciseId, [FromBody] UpdateExerciseDTO exerciseDTO)
+    {
+        if (!ModelState.IsValid || exerciseId == Guid.Empty) return BadRequest($"Invalid payload: {ModelState}");
+
+        var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(exerciseId));
+        if (exercise == null) return NotFound($"Exercise with id {exerciseId} not found.");
+
+        _mapper.Map(exerciseDTO, exercise);
+
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        if (userRoles.Any(ur => ur.Value == Role.Admin))
         {
-            if (!ModelState.IsValid || id == Guid.Empty) return BadRequest(ModelState);
-
-            var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(id));
-            if (exercise == null) return BadRequest("Submitted data is invalid.");
-
-            if (!await IsAuthorized(exercise.CreatorId)) return Forbid(); 
-
-            _mapper.Map(exerciseDTO, exercise);
             _unitOfWork.Exercises.Update(exercise);
-            await _unitOfWork.Save();
-
-            return NoContent();
         }
-
-        [Authorize(Roles = "Admin,Consumer")]
-        [HttpDelete("{id}")]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<IActionResult> DeleteExercise(Guid id)
+        else
         {
-            if (id == Guid.Empty) return BadRequest();
-
-            var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(id));   
-            if (exercise == null) return BadRequest("Submitted data is invalid.");
-
-            if (!await IsAuthorized(exercise.CreatorId)) return Forbid();
-
-            await _unitOfWork.Exercises.Delete(id);
-            await _unitOfWork.Save();
-
-            return NoContent();
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (exercise.CreatorId != currentUserId) return Forbid("You are not authorized to update this exercise.");
+            _unitOfWork.Exercises.Update(exercise);
         }
+        await _unitOfWork.Save();
 
-        [Authorize(Roles = "Admin,Consumer")]
-        [HttpGet("search")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> Search([FromQuery] string searchRequest)
+        return NoContent();
+    }
+
+    [Authorize(Roles = "Admin,Consumer")]
+    [HttpDelete("{exerciseId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> DeleteExercise(Guid exerciseId)
+    {
+        if (exerciseId == Guid.Empty) return BadRequest("Submitted data is invalid.");
+
+        var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(exerciseId));
+        if (exercise == null) return NotFound($"Exercise with id {exerciseId} not found.");
+
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        if (userRoles.Any(ur => ur.Value == Role.Admin))
         {
-            if (string.IsNullOrEmpty(searchRequest)) 
-                return BadRequest("Submitted data is invalid.");
-
-            var currentUser = await _authManager.GetCurrentUser(User);
-            var userRole = await _authManager.GetUserRoleById(currentUser.Id);
-
-            IEnumerable<Exercise> exercises = await _unitOfWork.Exercises.Search(exercise =>
-            exercise.Title.ToLower().Contains(searchRequest.ToLower()));
-
-            if (userRole != "Admin")
-            {
-                exercises = exercises.Where(exercise => exercise.CreatorId == currentUser.Id);
-            }
-            var result = _mapper.Map<IList<ExerciseDTO>>(exercises);
-
-            return Ok(result);
+            await _unitOfWork.Exercises.Delete(exerciseId);
         }
-
-        private async Task<bool> ExerciseTemplateExists(Guid? id)
+        else
         {
-            return await _unitOfWork.ExerciseTemplates.Get(e => e.Id.Equals(id)) != null;
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (exercise.CreatorId != currentUserId) return Forbid("You are not authorized to delete this exercise.");
+            await _unitOfWork.Exercises.Delete(exerciseId);
         }
+        await _unitOfWork.Save();
 
+        return NoContent();
+    }
+
+    [Authorize(Roles = "Admin,Consumer")]
+    [HttpGet("search")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Search([FromQuery] string searchRequest)
+    {
+        if (string.IsNullOrEmpty(searchRequest)) return BadRequest("Submitted data is invalid.");
+        
+        searchRequest = searchRequest.ToLower();
+        IList<Exercise> exercises;
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        if (userRoles.Any(ur => ur.Value == Role.Admin))
+        {
+           exercises = await _unitOfWork.Exercises.GetAll(
+                e => e.Title.Equals(searchRequest));
+        }
+        else
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+           exercises = await _unitOfWork.Exercises.GetAll(
+                e => e.CreatorId == currentUserId && 
+                e.Title.Equals(searchRequest));
+        }
+        var results = _mapper.Map<IList<ExerciseDTO>>(exercises);
+
+        return Ok(results);
     }
 }
