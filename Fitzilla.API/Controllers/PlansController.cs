@@ -71,47 +71,54 @@ public class PlansController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
-    [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    public async Task<IActionResult> CreatePlan([FromBody] CreatePlanDTO planDTO)
-    {
-        if (!ModelState.IsValid) return BadRequest($"Invalid payload: {ModelState}");
+        [Authorize(Roles = "Admin,Consumer")]
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> CreatePlan([FromBody] CreatePlanDTO planDTO)
+        {
+            if (!ModelState.IsValid) return BadRequest($"Invalid payload. {ModelState}");
 
-        var plan = _mapper.Map<Plan>(planDTO);
+            var plan = _mapper.Map<Plan>(planDTO);
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (plan.CreatorId != currentUserId) return Forbid("You are not authorized to create this plan.");
 
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (plan.CreatorId != currentUserId) return Forbid("You are not authorized to create this plan.");
-        await _unitOfWork.Plans.Insert(plan);
-        await _unitOfWork.Save();
+            if (plan.SessionsPerWeek < 1 || plan.SessionsPerWeek > 7) return BadRequest("SessionsPerWeek must be between 1 and 7.");
+            if (plan.DurationInWeeks < 1 || plan.DurationInWeeks > 52) return BadRequest("DurationInWeeks must be between 1 and 52.");
+
+            await _unitOfWork.Plans.Insert(plan);
+            await _unitOfWork.Save();
 
         return CreatedAtRoute("GetPlan", new { planId = plan.Id }, plan);
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
-    [HttpPut("{planId}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> UpdatePlan(Guid planId, [FromBody] UpdatePlanDTO planDTO)
-    {
-        if (!ModelState.IsValid || planId == Guid.Empty) return BadRequest($"Invalid payload: {ModelState}");
-
-        var plan = await _unitOfWork.Plans.Get(p => p.Id.Equals(planId));
-        if (plan == null) return NotFound($"Exercise with id {planId} not found.");
-
-        _mapper.Map(planDTO, plan);
-
-        var userRoles = User.FindAll(ClaimTypes.Role);
-        if (!userRoles.Any(ur => ur.Value == Role.Admin))
+        [Authorize(Roles = "Admin,Consumer")]
+        [HttpPut("{planId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UpdatePlan(Guid planId, [FromBody] UpdatePlanDTO planDTO)
         {
-            _unitOfWork.Plans.Update(plan);
-        }
-        else
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (plan.CreatorId != currentUserId) return Forbid("You are not authorized to update this plan.");
-            _unitOfWork.Plans.Update(plan);
-        }
-        await _unitOfWork.Save();
+            if (!ModelState.IsValid || planId == Guid.Empty) return BadRequest($"Invalid payload. {ModelState}");
+
+            var userRoles = User.FindAll(ClaimTypes.Role);
+            if (userRoles.Any(c => c.Value == Role.Admin))
+            {
+                var plan = await _unitOfWork.Plans.Get(w => w.Id.Equals(planId));
+                if (plan == null) return NotFound($"Plan with id {planId} not found.");
+                _mapper.Map(planDTO, plan);
+                _unitOfWork.Plans.Update(plan);
+            }
+            else
+            {
+                var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var plan = await _unitOfWork.Plans.Get(w => w.Id.Equals(planId) && w.CreatorId == currentUserId);
+                if (plan == null) return NotFound($"Plan with id {planId} not found.");
+                _mapper.Map(planDTO, plan);
+                _unitOfWork.Plans.Update(plan);
+            }
+            await _unitOfWork.Save();
 
         return NoContent();
     }

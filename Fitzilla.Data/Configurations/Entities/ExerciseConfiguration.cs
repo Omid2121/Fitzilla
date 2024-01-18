@@ -3,25 +3,25 @@ using Fitzilla.Models.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Fitzilla.DAL.Configurations.Entities;
-
-public class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
+namespace Fitzilla.DAL.Configurations.Entities
 {
-    public void Configure(EntityTypeBuilder<Exercise> builder)
+    public class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
     {
-        // Required fields
-        builder.Property(exercise => exercise.Id).IsRequired();
-        builder.Property(exercise => exercise.Title).IsRequired().HasMaxLength(40);
-        builder.Property(exercise => exercise.Set).IsRequired();
-        builder.Property(exercise => exercise.Rep).IsRequired();
-        builder.Property(exercise => exercise.Weight).IsRequired();
-        builder.Property(exercise => exercise.ImageId).IsRequired();
-        builder.Property(exercise => exercise.CreatorId).IsRequired();
+        public void Configure(EntityTypeBuilder<Exercise> builder)
+        {
+            // Required fields
+            builder.Property(exercise => exercise.Id).IsRequired();
+            builder.Property(exercise => exercise.Title).IsRequired().HasMaxLength(40);
+            builder.Property(exercise => exercise.Set).IsRequired();
+            builder.Property(exercise => exercise.Rep).IsRequired();
+            builder.Property(exercise => exercise.Weight).IsRequired();
+            builder.Property(exercise => exercise.MediaId).IsRequired();
+            builder.Property(exercise => exercise.CreatorId).IsRequired();
 
-        // Exercise has a many-to-one relationship with Image
-        builder.HasOne(exercise => exercise.Image)
-            .WithMany(image => image.Exercises)
-            .HasForeignKey(exercise => exercise.ImageId);
+            // Exercise has a many-to-one relationship with Image
+            builder.HasOne(exercise => exercise.Media)
+                .WithMany(image => image.Exercises)
+                .HasForeignKey(exercise => exercise.MediaId);
 
         // Exercise has a many-to-one relationship with Session
         builder.HasOne(exercise => exercise.Session)
