@@ -20,9 +20,14 @@ public static class ServiceExtensions
 {
     public static void ConfigureIdentity(this IServiceCollection services)
     {
-        var builder = services.AddIdentityCore<User>(q =>
+        var builder = services.AddIdentityCore<User>(options =>
         {
-            q.User.RequireUniqueEmail = true;
+            options.User.RequireUniqueEmail = true;
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireUppercase = true;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequiredLength = 8;
         });
         builder = new IdentityBuilder(builder.UserType, typeof(IdentityRole), services);
         builder.AddTokenProvider("FitzillaApi", typeof(DataProtectorTokenProvider<User>));
@@ -36,8 +41,9 @@ public static class ServiceExtensions
 
     public static void ConfigureJWT(this IServiceCollection services, IConfiguration configuration)
     {
-        var jwtSettings = configuration.GetSection("Jwt");
-        var key = Environment.GetEnvironmentVariable("KEY");
+        var jwtSettings = configuration.GetSection("JwtSettings");
+        //var key = Environment.GetEnvironmentVariable("JwtSecretKey");
+        var key = jwtSettings.GetSection("JwtSecretKey").Value;
 
         services.AddAuthentication(options =>
         {
@@ -48,14 +54,14 @@ public static class ServiceExtensions
         {
             options.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateIssuer = true,              // the server that created the token
-                ValidateLifetime = true,            // the token is valid for a certain amount of time
-                ValidateAudience = true,            // the recipient of the token is authorized to receive it
-                ValidateIssuerSigningKey = true,    // the server that created the signing key is trusted
-                ValidAudience = jwtSettings.GetSection("Audience").Value,   // the audience is authorized to receive it
-                ValidIssuer = jwtSettings.GetSection("Issuer").Value,   // the audience is authorized to receive it
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),   // the signing key is used to verify the identity of the issuer
-                ClockSkew = TimeSpan.Zero           // the clock skew between the server and client
+                ValidateIssuer = true,              // Validate the server that created that token
+                ValidateLifetime = true,            // Validate the lifetime of the token
+                ValidateAudience = true,            // Validate the recipient of the token is authorized to receive it
+                ValidateIssuerSigningKey = true,    // Validate the encripted key is valid and trusted by the server
+                ValidAudience = jwtSettings.GetSection("JwtValidAudience").Value,
+                ValidIssuer = jwtSettings.GetSection("JwtValidIssuer").Value,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+                ClockSkew = TimeSpan.Zero           // There is no time difference between the server and the client
             };
         });
     }
@@ -93,6 +99,7 @@ public static class ServiceExtensions
             (validationOpt) =>
             {
                 validationOpt.MustRevalidate = true;
+                validationOpt.ProxyRevalidate = true;
             }
         );
     }
@@ -104,7 +111,7 @@ public static class ServiceExtensions
             new RateLimitRule
             {
                 Endpoint = "*",
-                Limit = 30,
+                Limit = 100,
                 Period = "5m"
             }
         };

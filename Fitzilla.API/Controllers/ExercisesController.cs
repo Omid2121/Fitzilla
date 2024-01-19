@@ -32,12 +32,13 @@ public class ExercisesController : ControllerBase
         var userRoles = User.FindAll(ClaimTypes.Role);
         if (userRoles.Any(ur => ur.Value == Role.Admin))
         {
-            exercises = await _unitOfWork.Exercises.GetAll();
+            exercises = await _unitOfWork.Exercises.GetAll(includes: new List<string> { "Medias" });
         }
         else
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            exercises = await _unitOfWork.Exercises.GetAll(e => e.CreatorId == currentUserId);
+            exercises = await _unitOfWork.Exercises.GetAll(e => e.CreatorId == currentUserId, 
+                includes: new List<string> { "Medias" });
         }
         var results = _mapper.Map<IList<ExerciseDTO>>(exercises);
 
@@ -62,7 +63,7 @@ public class ExercisesController : ControllerBase
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             exercise = await _unitOfWork.Exercises.Get(
-                e => e.CreatorId == currentUserId && e.Id.Equals(exerciseId), new List<string> { "Session", "Media" });
+                e => e.CreatorId == currentUserId && e.Id.Equals(exerciseId), new List<string> { "Session", "Medias" });
         }
         var result = _mapper.Map<ExerciseDTO>(exercise);
 
@@ -159,14 +160,16 @@ public class ExercisesController : ControllerBase
         if (userRoles.Any(ur => ur.Value == Role.Admin))
         {
            exercises = await _unitOfWork.Exercises.GetAll(
-                e => e.Title.Equals(searchRequest));
+                e => e.Title.Equals(searchRequest),
+                includes: new List<string> { "Medias" });
         }
         else
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
            exercises = await _unitOfWork.Exercises.GetAll(
                 e => e.CreatorId == currentUserId && 
-                e.Title.Equals(searchRequest));
+                e.Title.Equals(searchRequest), 
+                includes: new List<string> { "Medias" });
         }
         var results = _mapper.Map<IList<ExerciseDTO>>(exercises);
 

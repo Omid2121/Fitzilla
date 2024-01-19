@@ -1,19 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Fitzilla.BLL.Services;
 
-namespace Fitzilla.BLL.Services
+public class PlanManager
 {
-    public class PlanManager
+
+    public PlanManager()
     {
-
-        public PlanManager()
-        {
-            
-        }
-
-
+        
     }
+
 }

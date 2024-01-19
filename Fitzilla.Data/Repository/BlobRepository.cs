@@ -2,6 +2,7 @@
 using Azure.Storage.Blobs.Models;
 using Fitzilla.DAL.IRepository;
 using Fitzilla.DAL.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace Fitzilla.DAL.Repository
 {
@@ -23,7 +24,6 @@ namespace Fitzilla.DAL.Repository
             var blobClient = _client.GetBlobClient(fileName);
             await blobClient.DeleteIfExistsAsync();
         }
-
         public async Task<BlobObject> GetBlobFile(string path)
         {
             var fileName = new Uri(path).Segments.LastOrDefault();
@@ -76,12 +76,37 @@ namespace Fitzilla.DAL.Repository
             return blobs;
         }
 
-        public async Task<string> UploadBlobFile(string filePath, string fileName)
+        public async Task<string> UploadBlobFile(IFormFile file)
         {
-            var blobClient = _client.GetBlobClient(fileName);
-            await blobClient.UploadAsync(filePath);
+            var blobClient = _client.GetBlobClient(file.FileName);
+            await blobClient.UploadAsync(file.OpenReadStream());
 
             return blobClient.Uri.AbsoluteUri;
+        }
+
+        // Upload Blob files
+        public async Task<List<string>> UploadBlobFiles(List<IFormFile> files)
+        {
+            var blobUris = new List<string>();
+
+            foreach (var file in files)
+            {
+                var blobClient = _client.GetBlobClient(file.FileName);
+                await blobClient.UploadAsync(file.OpenReadStream());
+                blobUris.Add(blobClient.Uri.AbsoluteUri);
+            }
+
+            return blobUris;
+        }
+
+        public async Task DeleteBlobFiles(List<string> paths)
+        {
+            foreach (var path in paths)
+            {
+                var fileName = new Uri(path).Segments.LastOrDefault();
+                var blobClient = _client.GetBlobClient(fileName);
+                await blobClient.DeleteIfExistsAsync();
+            }
         }
     }
 }

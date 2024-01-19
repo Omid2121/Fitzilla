@@ -10,12 +10,11 @@ public class Exercise : EntityDetail
     
     public double Weight { get; set; }
 
-    public Guid MediaId { get; set; }
-    public Media Media { get; set; }
-
     public Guid? SessionId { get; set; }
     public Session? Session { get; set; }
    
     public string CreatorId { get; set; }
     public User Creator { get; set; }
+
+    public virtual ICollection<Media>? Medias { get; set; }
 }

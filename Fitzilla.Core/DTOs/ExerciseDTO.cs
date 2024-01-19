@@ -17,8 +17,6 @@ public class CreateExerciseDTO
     
     [Required]
     public double Weight { get; set; }
-    
-    public Guid MediaId { get; set; }
 
     public Guid? SessionId { get; set; }
 
@@ -28,12 +26,12 @@ public class CreateExerciseDTO
 public class ExerciseDTO : CreateExerciseDTO
 {
     public Guid Id { get; set; }
-    
-    public string MediaTitle { get; set; }
 
     public string CreatorEmail { get; set; }
-    
+
     public string SessionTitle { get; set; }
+
+    public virtual IList<MediaDTO>? Medias { get; set; }
 }
 
 public class UpdateExerciseDTO : CreateExerciseDTO

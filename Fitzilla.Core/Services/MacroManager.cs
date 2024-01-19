@@ -16,23 +16,15 @@ public class MacroManager
         _userManager = userManager;
     }
 
-    //TODO: Improve this method
     public Macro? CalculateMacros(Macro macro, User user)
     {
         macro.Calorie = CalculateBMR(user);
         macro.Calorie = CalculateActivityLevel(macro);
         macro.Calorie = CalculateGoalType(macro);
 
-        /*
-         macro.Calorie = CalculateBMR(user, macro)
-            .CalculateActivityLevel()
-            .CalculateGoalType()
-            .Build();
-         */
-
         // User's macros (Protein, Carbs, Fat)
         if (!IsValidMacroPercentage(macro.ProteinPercentage, macro.CarbohydratePercentage, macro.FatPercentage))
-            throw new Exception("Not implemented yet");
+            throw new Exception("Macro percentages should add up to 100%");
 
         macro.ProteinAmount = macro.Calorie * (macro.ProteinPercentage / 100) / 4;
         macro.CarbohydrateAmount = macro.Calorie * (macro.CarbohydratePercentage / 100) / 4;

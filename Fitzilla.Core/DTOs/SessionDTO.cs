@@ -36,6 +36,13 @@ public class SessionDTO : CreateSessionDTO
     public virtual ICollection<ExerciseDTO> Exercises { get; set; }
 }
 
-public class UpdateSessionDTO : SessionDTO
+public class UpdateSessionDTO
 {
+    [Required]
+    public string Title { get; set; }
+
+    public string? Description { get; set; }
+
+    [Required]
+    public TargetedMuscle TargetMuscle { get; set; }
 }

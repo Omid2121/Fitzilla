@@ -33,7 +33,10 @@ public class AuthManager : IAuthManager
 
     private SigningCredentials GetSigningCredentials()
     {
-        var key = Environment.GetEnvironmentVariable("KEY");
+        // Depending on where you store your key (Environment or appsettings.json)
+        //var key = Environment.GetEnvironmentVariable("JwtSecretKey");
+        var key = _configuration.GetSection("JwtSettings").GetSection("JwtSecretKey").Value;
+        
         var secret = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
 
         return new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
@@ -43,10 +46,13 @@ public class AuthManager : IAuthManager
     {
         var claims = new List<Claim>
         {
+            new Claim(ClaimTypes.NameIdentifier, _user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Sub, _user.Email),
-
-            //new Claim(ClaimTypes.Name, _user.UserName)
+            new Claim(ClaimTypes.Name, _user.UserName),
+            new Claim(ClaimTypes.GivenName, _user.FirstName),
+            new Claim(ClaimTypes.Surname, _user.LastName),
+            new Claim(ClaimTypes.Email, _user.Email)
         };
         var roles = await _userManager.GetRolesAsync(_user);
         foreach (var role in roles)
@@ -59,18 +65,17 @@ public class AuthManager : IAuthManager
 
     private JwtSecurityToken GenerateTokenOption(SigningCredentials signingCredentials, List<Claim> claims)
     {
-        var jwtSettings = _configuration.GetSection("Jwt");
-        var expiration = DateTime.Now.AddMinutes(
-            Convert.ToDouble(jwtSettings.GetSection("Lifetime").Value));
+        var jwtSettings = _configuration.GetSection("JwtSettings");
+        var expiration = DateTimeOffset.Now.AddMinutes(
+            Convert.ToDouble(jwtSettings.GetSection("JwtLifetime").Value));
 
         var token = new JwtSecurityToken(
-            issuer: jwtSettings.GetSection("Issuer").Value,
-            audience: jwtSettings.GetSection("Audience").Value,
+            issuer: jwtSettings.GetSection("JwtValidIssuer").Value,
+            audience: jwtSettings.GetSection("JwtValidAudience").Value,
             claims: claims,
-            expires: expiration,
+            expires: expiration.UtcDateTime,
             signingCredentials: signingCredentials
             );
-
         return token;
     }
 

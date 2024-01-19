@@ -6,16 +6,16 @@ using System.Threading.Tasks;
 
 namespace Fitzilla.Models.Data;
 
-public class Media : EntityDetail
+public class Media : IEntity
 {
-    public string ImageUrl { get; set; }
-
-    public string? VideoUrl { get; set; }
+    public Guid Id { get; set; }
+    public string Title { get; set; }
+    public string FilePath { get; set; }
 
     public string CreatorId { get; set; }
     public User Creator { get; set; }
 
-    public virtual ICollection<ExerciseTemplate> ExerciseTemplates { get; set; }
+    public virtual ICollection<ExerciseTemplate>? ExerciseTemplates { get; set; }
 
-    public virtual ICollection<Exercise> Exercises { get; set; }
+    public virtual ICollection<Exercise>? Exercises { get; set; }
 }

@@ -5,9 +5,7 @@ using Fitzilla.DAL.IRepository;
 using Fitzilla.Models;
 using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.Numerics;
 using System.Security.Claims;
 
 namespace Fitzilla.API.Controllers;
@@ -49,6 +47,7 @@ public class SessionsController : ControllerBase
     [HttpGet("{sessionId}", Name = "GetSession")]
     [Authorize(Roles = "Admin, Consumer")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetSession(Guid sessionId)
     {
         if (sessionId == Guid.Empty) return BadRequest("Submitted data is invalid.");
@@ -83,6 +82,12 @@ public class SessionsController : ControllerBase
         //session.CreatorId = currentUserId;
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (session.CreatorId != currentUserId) return Forbid("You are not authorized to create this session.");
+
+        var plan = await _unitOfWork.Plans.Get(p => p.Id.Equals(session.PlanId));
+        if (plan == null) return NotFound($"Plan with id {session.PlanId} not found.");
+
+        if (plan.Sessions.Count >= 7 || plan.Sessions.Count == plan.SessionsPerWeek) return BadRequest("Plan's sessions are full.");
+
         await _unitOfWork.Sessions.Insert(session);
         await _unitOfWork.Save();
 
@@ -92,6 +97,9 @@ public class SessionsController : ControllerBase
     [HttpPut("{sessionId}")]
     [Authorize(Roles = "Admin, Consumer")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdateSession(Guid sessionId, [FromBody] UpdateSessionDTO sessionDTO)
     {
         if (sessionId == Guid.Empty || !ModelState.IsValid) return BadRequest($"Invalid payload. {ModelState}");
@@ -156,6 +164,8 @@ public class SessionsController : ControllerBase
         var session = await _unitOfWork.Sessions.Get(s => s.Id.Equals(sessionId));
         if (session == null) return NotFound($"Exercise with id {sessionId} not found.");
 
+        if (session.IsActive) return BadRequest("Session is already active.");
+
         var userRoles = User.FindAll(ClaimTypes.Role);
         if (userRoles.Any(ur => ur.Value == Role.Admin))
         {
@@ -187,6 +197,8 @@ public class SessionsController : ControllerBase
 
         var session = await _unitOfWork.Sessions.Get(s => s.Id.Equals(sessionId));
         if (session == null) return NotFound($"Exercise with id {sessionId} not found.");
+
+        if (!session.IsActive) return BadRequest("Session is already inactive.");
 
         var userRoles = User.FindAll(ClaimTypes.Role);
         if (userRoles.Any(ur => ur.Value == Role.Admin))

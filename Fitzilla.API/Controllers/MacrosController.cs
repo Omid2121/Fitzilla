@@ -2,16 +2,11 @@
 using Fitzilla.BLL.DTOs;
 using Fitzilla.BLL.Services;
 using Fitzilla.DAL.IRepository;
-using Fitzilla.DAL.Models;
-using Fitzilla.DAL.Repository;
 using Fitzilla.Models;
 using Fitzilla.Models.Data;
-using Fitzilla.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing.Constraints;
-using System.Data;
 using System.Security.Claims;
 
 namespace Fitzilla.API.Controllers;
@@ -92,78 +87,12 @@ public class MacrosController : ControllerBase
         var currentUser = await _userManager.GetUserAsync(User);
         if (currentUser == null) return BadRequest("User not found.");
 
-        //// User's BMR (Basal Metabolic Rate)
-        //int age = DateTime.Now.Year - currentUser.DateOfBirth.Year;
-        //if (currentUser.Gender == Gender.Male)
-        //{
-        //    macro.Calorie = (10 * currentUser.Weight) + (6.25 * currentUser.Height) - (5 * age) + 5;
-        //}
-        //else
-        //{
-        //    macro.Calorie = (10 * currentUser.Weight) + (6.25 * currentUser.Height) - (5 * age) - 161;
-        //}
-
-        //// User's TDEE (Total Daily Energy Expenditure)
-        //switch (macro.ActivityLevel)
-        //{
-        //    case ActivityLevel.Sedentary:
-        //        macro.Calorie *= 1.2;
-        //        break;
-        //    case ActivityLevel.LightlyActive:
-        //        macro.Calorie *= 1.375;
-        //        break;
-        //    case ActivityLevel.ModeratelyActive:
-        //        macro.Calorie *= 1.55;
-        //        break;
-        //    case ActivityLevel.VigorouslyActive:
-        //        macro.Calorie *= 1.725;
-        //        break;
-        //    case ActivityLevel.VeryActive:
-        //        macro.Calorie *= 1.9;
-        //        break;
-        //    default:
-        //        break;
-        //}
-
-        //// Find user's goal type (Cutting, Maintenance, Bulking)
-        //switch (macro.GoalType)
-        //{
-        //    case GoalType.MildWeightLoss:
-        //        macro.Calorie -= 250;
-        //        break;
-        //    case GoalType.WeightLoss:
-        //        macro.Calorie -= 500;
-        //        break;
-        //    case GoalType.ExtremeWeightLoss:
-        //        macro.Calorie -= 1000;
-        //        break;
-        //    case GoalType.Maintenance:
-        //        break;
-        //    case GoalType.MildWeightGain:
-        //        macro.Calorie += 250;
-        //        break;
-        //    case GoalType.WeightGain:
-        //        macro.Calorie += 500;
-        //        break;
-        //    case GoalType.ExtremeWeightGain:
-        //        macro.Calorie += 1000;
-        //        break;
-        //    default:
-        //        break;
-        //}
-
-        //// User's macros (Protein, Carbs, Fat)
-        //if (macro.ProteinPercentage + macro.CarbohydratePercentage + macro.FatPercentage != 100) return BadRequest("Macros must add up to 100%.");
-
-        //macro.ProteinAmount = macro.Calorie * (macro.ProteinPercentage / 100) / 4;
-        //macro.CarbohydrateAmount = macro.Calorie * (macro.CarbohydratePercentage / 100) / 4;
-        //macro.FatAmount = macro.Calorie * (macro.FatPercentage / 100) / 9;
-
         //var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (macro.CreatorId != currentUser.Id) return Forbid("You are not authorized to create this macro.");
 
         macro = _macroManager.CalculateMacros(macro, currentUser);
         if (macro is null) return BadRequest("Invalid payload.");
+        
         await _unitOfWork.Macros.Insert(macro);
         await _unitOfWork.Save();
 

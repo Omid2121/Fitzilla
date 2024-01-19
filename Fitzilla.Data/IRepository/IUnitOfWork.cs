@@ -1,5 +1,6 @@
 ﻿using Fitzilla.DAL.Repository;
 using Fitzilla.Models.Data;
+using System.Data;
 
 namespace Fitzilla.DAL.IRepository;
 
@@ -11,4 +12,5 @@ public interface IUnitOfWork : IDisposable
     PlanRepository Plans { get; }
     MacroRepository Macros { get; }
     Task Save();
+    IDbTransaction BeginTransaction();
 }

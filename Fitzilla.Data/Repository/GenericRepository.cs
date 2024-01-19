@@ -94,26 +94,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class, IEnti
         entities.Select(entity => entity.Id = Guid.NewGuid());
         await _dbSet.AddRangeAsync(entities);
     }
-
-    public async Task<IList<T>> Search(Expression<Func<T, bool>> predicate, List<string> includes = null)
-    {
-        IQueryable<T> query = _dbSet;
-
-        if (predicate != null)
-        {
-            query = query.Where(predicate);
-        }
-
-        if (includes != null)
-        {
-            foreach (var includeProperty in includes)
-            {
-                query = query.Include(includeProperty);
-            }
-        }   
-        return await query.AsNoTracking().ToListAsync();
-    }
-
+    
     public void Update(T entity)
     {
         _dbSet.Attach(entity);

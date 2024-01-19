@@ -18,7 +18,7 @@ public enum TargetedMuscle
     /// The workout targets whole body.
     /// </summary>
     [Display(Name = "Whole Body")] WholeBody,
-
+    
     /// <summary>
     /// The workout targets chest.
     /// </summary>
@@ -43,6 +43,11 @@ public enum TargetedMuscle
     /// The workout targets triceps.
     /// </summary>
     [Display(Name = "Triceps")] Triceps,
+
+    /// <summary>
+    /// The workout targets Trapezius.
+    /// </summary>
+    [Display(Name = "Trapezius")] Trapezius,
 
     /// <summary>
     /// The workout targets forearms.
