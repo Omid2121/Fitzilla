@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Fitzilla.DAL.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace Fitzilla.BLL.DTOs;
 
@@ -16,6 +17,10 @@ public class MediaDTO : CreateMediaDTO
 {
     public Guid Id { get; set; }
 
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset? ModifiedAt { get; set; }
+    
     public string CreatorEmail { get; set; }
 
     public virtual ICollection<ExerciseTemplateDTO>? ExerciseTemplates { get; set; }

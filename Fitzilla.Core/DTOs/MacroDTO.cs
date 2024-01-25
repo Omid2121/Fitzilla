@@ -10,8 +10,10 @@ public class CreateMacroDTO
     
     public string? Description { get; set; }
 
+    [Required]
     public double GoalWeight { get; set; }
 
+    [Required] 
     public DateTimeOffset CycleStartDate { get; set; }
 
     public DateTimeOffset CycleEndDate { get; set; }
@@ -36,7 +38,24 @@ public class CreateMacroDTO
 }
 public class MacroDTO : CreateMacroDTO
 {
+    [Required]
     public Guid Id { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset? ModifiedAt { get; set; }
+    
+    [Required]
+    public double Calorie { get; set; }
+
+    [Required]
+    public double ProteinAmount { get; set; }
+
+    [Required]
+    public double CarbohydrateAmount { get; set; }
+
+    [Required]
+    public double FatAmount { get; set; }
 
     public string CreatorEmail { get; set; }
 }

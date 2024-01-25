@@ -18,7 +18,7 @@ public class CreateSessionDTO
     public string? Description { get; set; }
 
     [Required]
-    public TargetedMuscle TargetMuscle { get; set; }
+    public ICollection<ActivityType> ActivityTypes { get; set; }
 
     public Guid PlanId { get; set; }
     
@@ -28,12 +28,22 @@ public class CreateSessionDTO
 public class SessionDTO : CreateSessionDTO
 {
     public Guid Id { get; set; }
+
+    public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset? ModifiedAt { get; set; }
+    
+    public bool IsActive { get; set; }
+    
+    public DateTimeOffset? ActivatedAt { get; set; }
+    
+    public DateTimeOffset? DeactivatedAt { get; set; }
     
     public string PlanTitle { get; set; }
 
     public string CreatorEmail { get; set; }
 
-    public virtual ICollection<ExerciseDTO> Exercises { get; set; }
+    public virtual ICollection<ExerciseDTO>? Exercises { get; set; }
 }
 
 public class UpdateSessionDTO
@@ -44,5 +54,5 @@ public class UpdateSessionDTO
     public string? Description { get; set; }
 
     [Required]
-    public TargetedMuscle TargetMuscle { get; set; }
+    public ICollection<ActivityType> ActivityTypes { get; set; }
 }

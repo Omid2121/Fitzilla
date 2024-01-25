@@ -1,29 +1,26 @@
 ﻿using AutoMapper;
 using Fitzilla.BLL.DTOs;
 using Fitzilla.DAL.IRepository;
+using Fitzilla.DAL.Models;
 using Fitzilla.Models;
 using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using X.PagedList;
 
 namespace Fitzilla.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize(Roles = "Admin, Consumer")]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-public class ExercisesController : ControllerBase
+public class ExercisesController(IUnitOfWork unitOfWork, IMapper mapper, IBlobRepository blobRepository) : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
+    private readonly IBlobRepository _blobRepository = blobRepository;
 
-    public ExercisesController(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
-
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetExercises()
@@ -32,20 +29,40 @@ public class ExercisesController : ControllerBase
         var userRoles = User.FindAll(ClaimTypes.Role);
         if (userRoles.Any(ur => ur.Value == Role.Admin))
         {
-            exercises = await _unitOfWork.Exercises.GetAll(includes: new List<string> { "Medias" });
+            exercises = await _unitOfWork.Exercises.GetAll(includes: ["Medias"]);
         }
         else
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             exercises = await _unitOfWork.Exercises.GetAll(e => e.CreatorId == currentUserId, 
-                includes: new List<string> { "Medias" });
+                includes: ["Medias"]);
         }
         var results = _mapper.Map<IList<ExerciseDTO>>(exercises);
+        
+        return Ok(results);
+    }
+
+    [HttpGet("paged")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPagedExercises([FromQuery] RequestParams requestParams)
+    {
+        IPagedList<Exercise> exercises;
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        if (userRoles.Any(ur => ur.Value == Role.Admin))
+        {
+            exercises = await _unitOfWork.Exercises.GetPagedList(requestParams, includes: ["Medias"]);
+        }
+        else
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            exercises = await _unitOfWork.Exercises.GetPagedList(requestParams, e => e.CreatorId == currentUserId,
+                includes: ["Medias"]);
+        }
+        var results = _mapper.Map<IList<ExerciseDTO>> (exercises);
 
         return Ok(results);
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpGet("{exerciseId}", Name = "GetExercise")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -57,25 +74,24 @@ public class ExercisesController : ControllerBase
         var userRoles = User.FindAll(ClaimTypes.Role);
         if (userRoles.Any(ur => ur.Value == Role.Admin))
         {
-            exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(exerciseId));
+            exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(exerciseId), ["Session", "Medias"]);
         }
         else
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             exercise = await _unitOfWork.Exercises.Get(
-                e => e.CreatorId == currentUserId && e.Id.Equals(exerciseId), new List<string> { "Session", "Medias" });
+                e => e.CreatorId == currentUserId && e.Id.Equals(exerciseId), ["Session", "Medias"]);
         }
         var result = _mapper.Map<ExerciseDTO>(exercise);
 
         return Ok(result);
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> CreateExercise([FromBody] CreateExerciseDTO exerciseDTO)
+    public async Task<IActionResult> CreateExerciseWithoutSession([FromBody] CreateExerciseDTO exerciseDTO)
     {
         if (!ModelState.IsValid) return BadRequest($"Invalid payload: {ModelState}");
 
@@ -83,6 +99,30 @@ public class ExercisesController : ControllerBase
 
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (exercise.CreatorId != currentUserId) return Forbid("You are not authorized to create this exercise.");
+
+        await _unitOfWork.Exercises.Insert(exercise);
+        await _unitOfWork.Save();
+
+        return CreatedAtRoute("GetExercise", new { exerciseId = exercise.Id }, exercise);
+    }
+
+    [HttpPost("session/{sessionId}")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateExerciseForSession(Guid sessionId, [FromBody] CreateExerciseDTO exerciseDTO)
+    {
+        if (!ModelState.IsValid || sessionId == Guid.Empty) return BadRequest($"Invalid payload: {ModelState}");
+
+        var session = await _unitOfWork.Sessions.Get(s => s.Id.Equals(sessionId));
+        if (session == null) return NotFound($"Session with id {sessionId} not found.");
+
+        var exercise = _mapper.Map<Exercise>(exerciseDTO);
+        //exercise.SessionId = sessionId;
+
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (exercise.CreatorId != currentUserId) return Forbid("You are not authorized to create this exercise.");
+
         await _unitOfWork.Exercises.Insert(exercise);
         await _unitOfWork.Save();
 
@@ -118,7 +158,6 @@ public class ExercisesController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpDelete("{exerciseId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -146,7 +185,6 @@ public class ExercisesController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -161,7 +199,7 @@ public class ExercisesController : ControllerBase
         {
            exercises = await _unitOfWork.Exercises.GetAll(
                 e => e.Title.Equals(searchRequest),
-                includes: new List<string> { "Medias" });
+                includes: ["Medias"]);
         }
         else
         {
@@ -169,7 +207,7 @@ public class ExercisesController : ControllerBase
            exercises = await _unitOfWork.Exercises.GetAll(
                 e => e.CreatorId == currentUserId && 
                 e.Title.Equals(searchRequest), 
-                includes: new List<string> { "Medias" });
+                includes: ["Medias"]);
         }
         var results = _mapper.Map<IList<ExerciseDTO>>(exercises);
 

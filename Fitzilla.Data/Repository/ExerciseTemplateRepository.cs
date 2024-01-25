@@ -2,9 +2,6 @@
 
 namespace Fitzilla.DAL.Repository;
 
-public class ExerciseTemplateRepository : GenericRepository<ExerciseTemplate>
+public class ExerciseTemplateRepository(DatabaseContext context) : GenericRepository<ExerciseTemplate>(context)
 {
-    public ExerciseTemplateRepository(DatabaseContext context) : base(context)
-    {
-    }
 }

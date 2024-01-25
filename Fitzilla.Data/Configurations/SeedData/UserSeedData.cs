@@ -12,23 +12,23 @@ namespace Fitzilla.DAL.Configurations.SeedData;
 
 public static class UserSeedData
 {
-    public static List<User> Users()
-    {
-        return new List<User>()
-        {
-            new User
-            {
-                Id = Guid.NewGuid().ToString(),
-                FirstName = "Test Name",
-                LastName = "Test Last Name",
-                Email = "test@email.com",
-                PasswordHash = "password123.",
-                DateOfBirth = DateTime.Now,
-                Gender = "Male",
-                Weight = 80,
-                Height = 180,
-                Measurement = Measurement.METRIC,
-            }
-        }; 
-    }
+    //public static List<User> Users()
+    //{
+    //    return new List<User>()
+    //    {
+    //        new User
+    //        {
+    //            Id = Guid.NewGuid().ToString(),
+    //            FirstName = "Test Name",
+    //            LastName = "Test Last Name",
+    //            Email = "test@email.com",
+    //            PasswordHash = "password123.",
+    //            DateOfBirth = DateTime.Now,
+    //            Gender = Gender.Male,
+    //            Weight = 80,
+    //            Height = 180,
+    //            Measurement = Measurement.Metric,
+    //        }
+    //    }; 
+    //}
 }

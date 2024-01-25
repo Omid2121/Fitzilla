@@ -1,5 +1,4 @@
 ﻿using Fitzilla.DAL.Repository;
-using Fitzilla.Models.Data;
 using System.Data;
 
 namespace Fitzilla.DAL.IRepository;

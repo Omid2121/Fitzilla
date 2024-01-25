@@ -10,17 +10,11 @@ using System.Text;
 
 namespace Fitzilla.BLL.Services;
 
-public class AuthManager : IAuthManager
+public class AuthManager(UserManager<User> userManager, IConfiguration configuration) : IAuthManager
 {
-    private readonly UserManager<User> _userManager;
-    private readonly IConfiguration _configuration;
+    private readonly UserManager<User> _userManager = userManager;
+    private readonly IConfiguration _configuration = configuration;
     private User _user;
-
-    public AuthManager(UserManager<User> userManager, IConfiguration configuration)
-    {
-        _userManager = userManager;
-        _configuration = configuration;
-    }
 
     public async Task<string> CreateToken()
     {

@@ -2,9 +2,6 @@
 
 namespace Fitzilla.DAL.Repository;
 
-public class MacroRepository : GenericRepository<Macro>
+public class MacroRepository(DatabaseContext context) : GenericRepository<Macro>(context)
 {
-    public MacroRepository(DatabaseContext context) : base(context)
-    {
-    }
 }

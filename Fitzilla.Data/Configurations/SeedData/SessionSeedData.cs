@@ -10,22 +10,28 @@ namespace Fitzilla.DAL.Configurations.SeedData;
 
 public class SessionSeedData
 {
-    public static List<Session> Sessions()
-    {
-        User? user = UserSeedData.Users().FirstOrDefault();
-        return new List<Session>()
-        {
-            new Session
-            {
-                Id = Guid.NewGuid(),
-                Title = "Test Workout",
-                Description = "Workout description",
-                TargetMuscle = TargetedMuscle.SHOULDERS,
-                CreatedAt = DateTime.Now,
-                CreatorId = user.Id,
-                Creator = user,
-                Exercises = ExerciseSeedData.Exercises()
-            }
-        };
-    }
+    //public static List<Session> Sessions()
+    //{
+    //    User? user = UserSeedData.Users().FirstOrDefault();
+    //    return new List<Session>()
+    //    {
+    //        new Session
+    //        {
+    //            Id = Guid.NewGuid(),
+    //            Title = "Test Workout",
+    //            Description = "Workout description",
+    //            CreatedAt = DateTimeOffset.Now,
+    //            ModifiedAt = DateTimeOffset.Now,
+    //            IsActive = false,
+    //            ActivatedAt = ,
+    //            DeactivatedAt = ,
+    //            PlanId = ,
+    //            Plan = ,
+    //            CreatorId = user.Id,
+    //            Creator = user,
+    //            ActivityTypes = ,
+    //            Exercises = 
+    //        }
+    //    };
+    //}
 }

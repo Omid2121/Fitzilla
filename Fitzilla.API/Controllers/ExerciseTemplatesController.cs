@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Fitzilla.BLL.DTOs;
-using Fitzilla.BLL.Services;
 using Fitzilla.DAL.IRepository;
 using Fitzilla.DAL.Models;
 using Fitzilla.Models;
@@ -13,33 +12,34 @@ namespace Fitzilla.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize(Roles = "Admin, Consumer")]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-public class ExerciseTemplatesController : ControllerBase
+public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper, IBlobRepository blobRepository) : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-    private readonly IBlobRepository _blobRepository;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
+    private readonly IBlobRepository _blobRepository = blobRepository;
 
-    public ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper, IBlobRepository blobRepository)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _blobRepository = blobRepository;
-    }
-
-
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetExerciseTemplates()
     {
-        var exerciseTemplates = await _unitOfWork.ExerciseTemplates.GetAll(includes: new List<string> { "Medias" });
+        var exerciseTemplates = await _unitOfWork.ExerciseTemplates.GetAll(includes: ["Medias"]);
         var results = _mapper.Map<IList<ExerciseTemplateDTO>>(exerciseTemplates);
 
         return Ok(results);
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
+    [HttpGet("paged")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPagedExerciseTemplates([FromQuery] RequestParams requestParams)
+    {
+        var exerciseTemplates = await _unitOfWork.ExerciseTemplates.GetPagedList(requestParams, includes: ["Medias"]);
+        var results = _mapper.Map<IList<ExerciseTemplateDTO>>(exerciseTemplates);
+
+        return Ok(results);
+    }
+
     [HttpGet("{exerciseTemplateId}", Name = "GetExerciseTemplate")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetExerciseTemplate(Guid exerciseTemplateId)
@@ -47,14 +47,13 @@ public class ExerciseTemplatesController : ControllerBase
         if (exerciseTemplateId == Guid.Empty) return BadRequest("Submitted data is invalid.");
 
         var exerciseTemplate = await _unitOfWork.ExerciseTemplates.Get(
-            e => e.Id.Equals(exerciseTemplateId), new List<string> { "Medias" });
+            e => e.Id.Equals(exerciseTemplateId), ["Medias"]);
 
         var result = _mapper.Map<ExerciseTemplateDTO>(exerciseTemplate);
 
         return Ok(result);
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -62,32 +61,41 @@ public class ExerciseTemplatesController : ControllerBase
     public async Task<IActionResult> CreateExerciseTemplate([FromBody] CreateExerciseTemplateDTO exerciseTemplateDTO, [FromForm] List<IFormFile> files)
     {
         if (!ModelState.IsValid) return BadRequest($"Invalid payload: {ModelState}");
-        
+
         var exerciseTemplate = _mapper.Map<ExerciseTemplate>(exerciseTemplateDTO);
 
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (exerciseTemplate.CreatorId == currentUserId) 
+        if (currentUserId == null || exerciseTemplate.CreatorId != currentUserId) 
             return Forbid("You are not authorized to create this exercise template.");
-
-        //foreach (var file in files)
-        //{
-        //    var filePath = await _blobRepository.UploadBlobFile(file);
-        //    exerciseTemplate.Medias = new List<Media> { new Media { FilePath = filePath, Title = file.FileName } };
-        //}
-
-        var filePathes = await _blobRepository.UploadBlobFiles(files);
-        for (int i = 0; i < filePathes.Count; i++)
+        
+        //TODO: Test following code.
+        var transaction = _unitOfWork.BeginTransaction();
+        try
         {
-            exerciseTemplate.Medias = new List<Media> { new Media { FilePath = filePathes[i], Title = files[i].FileName } };
+            var filePathsTasks = files.Select(_blobRepository.UploadBlobFile).ToList();
+            await Task.WhenAll(filePathsTasks);
+            var filePaths = filePathsTasks.Select(task => task.Result).ToList();
+
+            var medias = filePaths.Select((path, index) => new Media
+            {
+                Title = files[index].FileName,
+                FilePath = path,
+                CreatorId = currentUserId
+            }).ToList();
+
+            await _unitOfWork.ExerciseTemplates.Insert(exerciseTemplate);
+            await _unitOfWork.Save();
+            transaction.Commit();
+        }
+        catch (Exception)
+        {
+            transaction.Rollback();
+            throw;
         }
         
-        await _unitOfWork.ExerciseTemplates.Insert(exerciseTemplate);
-        await _unitOfWork.Save();
-
         return CreatedAtRoute("GetExerciseTemplate", new { exerciseTemplateId = exerciseTemplate.Id }, exerciseTemplate);
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpPut("{exerciseTemplateId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -123,7 +131,6 @@ public class ExerciseTemplatesController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpDelete("{exerciseTemplateId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -148,13 +155,12 @@ public class ExerciseTemplatesController : ControllerBase
         //TODO: make sure it works.
         var result = _blobRepository.DeleteBlobFiles(exerciseTemplate.Medias.Select(m => m.FilePath).ToList());
         if (result.IsFaulted) return BadRequest(result.Exception.Message);
-        
+
         await _unitOfWork.Save();
-        
+
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Search([FromQuery] string searchRequest)
@@ -168,7 +174,7 @@ public class ExerciseTemplatesController : ControllerBase
         {
             exerciseTemplates = await _unitOfWork.ExerciseTemplates.GetAll(
                 et => et.Title.Equals(searchRequest),
-                includes: new List<string> { "Medias" });
+                includes: ["Medias"]);
         }
         else
         {
@@ -176,7 +182,7 @@ public class ExerciseTemplatesController : ControllerBase
             exerciseTemplates = await _unitOfWork.ExerciseTemplates.GetAll(
                 et => et.CreatorId == currentUserId &&
                 et.Title.Equals(searchRequest),
-                includes: new List<string> { "Medias" });
+                includes: ["Medias"]);
         }
         var results = _mapper.Map<IList<ExerciseTemplateDTO>>(exerciseTemplates);
 

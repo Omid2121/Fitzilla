@@ -1,29 +1,25 @@
 ﻿using AutoMapper;
 using Fitzilla.BLL.DTOs;
 using Fitzilla.DAL.IRepository;
+using Fitzilla.DAL.Models;
 using Fitzilla.Models;
 using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using X.PagedList;
 
 namespace Fitzilla.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize(Roles = "Admin, Consumer")]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-public class PlansController : ControllerBase
+public class PlansController(IUnitOfWork unitOfWork, IMapper mapper) : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
-    public PlansController(IUnitOfWork unitOfWork, IMapper mapper)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
-
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPlans()
@@ -44,7 +40,26 @@ public class PlansController : ControllerBase
         return Ok(results);
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
+    [HttpGet("paged")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPagedPlans([FromQuery] RequestParams requestParams)
+    {
+        IPagedList<Plan> plans;
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        if (userRoles.Any(ur => ur.Value == Role.Admin))
+        {
+            plans = await _unitOfWork.Plans.GetPagedList(requestParams);
+        }
+        else
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            plans = await _unitOfWork.Plans.GetPagedList(requestParams, p => p.CreatorId == currentUserId);
+        }
+        var results = _mapper.Map<IList<PlanDTO>>(plans);
+
+        return Ok(results);
+    }
+
     [HttpGet("{planId}", Name = "GetPlan")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -68,7 +83,6 @@ public class PlansController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -90,7 +104,6 @@ public class PlansController : ControllerBase
         return CreatedAtRoute("GetPlan", new { planId = plan.Id }, plan);
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpPut("{planId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -123,7 +136,6 @@ public class PlansController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpDelete("{planId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeletePlan(Guid planId)
@@ -149,7 +161,6 @@ public class PlansController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Search([FromQuery] string searchRequest)

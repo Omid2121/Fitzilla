@@ -2,9 +2,6 @@
 
 namespace Fitzilla.DAL.Repository;
 
-public class PlanRepository : GenericRepository<Plan>
+public class PlanRepository(DatabaseContext context) : GenericRepository<Plan>(context)
 {
-    public PlanRepository(DatabaseContext context) : base(context)
-    {
-    }
 }

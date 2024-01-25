@@ -48,7 +48,6 @@ public class Program
         builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
         builder.Services.AddScoped<IAuthManager, AuthManager>();
         builder.Services.AddScoped<ExerciseManager>();
-        builder.Services.AddScoped<MediaManager>();
         builder.Services.AddScoped<MacroManager>();
         builder.Services.AddScoped<PlanManager>();
         builder.Services.AddScoped<SessionManager>();

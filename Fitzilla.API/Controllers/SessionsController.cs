@@ -12,19 +12,13 @@ namespace Fitzilla.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class SessionsController : ControllerBase
+[Authorize(Roles = "Admin, Consumer")]
+public class SessionsController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager) : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-
-    public SessionsController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
 
     [HttpGet]
-    [Authorize(Roles = "Admin, Consumer")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetSessions()
     {
@@ -45,7 +39,6 @@ public class SessionsController : ControllerBase
     }
 
     [HttpGet("{sessionId}", Name = "GetSession")]
-    [Authorize(Roles = "Admin, Consumer")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetSession(Guid sessionId)
@@ -70,7 +63,6 @@ public class SessionsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin, Consumer")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -95,7 +87,6 @@ public class SessionsController : ControllerBase
     }
 
     [HttpPut("{sessionId}")]
-    [Authorize(Roles = "Admin, Consumer")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -125,7 +116,6 @@ public class SessionsController : ControllerBase
     }
 
     [HttpDelete("{sessionId}")]
-    [Authorize(Roles = "Admin, Consumer")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -153,7 +143,6 @@ public class SessionsController : ControllerBase
     }
 
     [HttpPut("{sessionId}/activate")]
-    [Authorize(Roles = "Admin, Consumer")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -187,7 +176,6 @@ public class SessionsController : ControllerBase
     }
 
     [HttpPut("{sessionId}/deactivate")]
-    [Authorize(Roles = "Admin, Consumer")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -220,4 +208,36 @@ public class SessionsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPut("{sessionId}/cancel")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CancelSession(Guid sessionId)
+    {
+        if (sessionId == Guid.Empty) return BadRequest("Submitted data is invalid.");
+
+        var session = await _unitOfWork.Sessions.Get(s => s.Id.Equals(sessionId));
+        if (session == null) return NotFound($"Exercise with id {sessionId} not found.");
+
+        if (!session.IsActive) return BadRequest("Session is already inactive.");
+
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        if (userRoles.Any(ur => ur.Value == Role.Admin))
+        {
+            session.IsActive = false;
+            session.ActivatedAt = null;
+            _unitOfWork.Sessions.Update(session);
+        }
+        else
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (session.CreatorId != currentUserId) return Forbid("You are not authorized to cancel this session.");
+            session.IsActive = false;
+            session.ActivatedAt = DateTime.UtcNow;
+            _unitOfWork.Sessions.Update(session);
+        }
+        await _unitOfWork.Save();
+
+        return NoContent();
+    }
 }

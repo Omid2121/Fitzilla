@@ -46,12 +46,12 @@ public class UserDTO : CreateUserDTO
 {
     public string Id { get; set; }
 
-    public virtual IList<ExerciseTemplateDTO> ExerciseTemplates { get; set; }
-    public virtual IList<ExerciseDTO> Exercises { get; set; }
-    public virtual IList<MacroDTO> Macros { get; set; }
-    public virtual ICollection<SessionDTO> Sessions { get; set; }
-    public virtual IList<PlanDTO> Plans { get; set; }
-    public virtual IList<MediaDTO> Images { get; set; }
+    public virtual ICollection<ExerciseTemplateDTO>? ExerciseTemplates { get; set; }
+    public virtual ICollection<ExerciseDTO>? Exercises { get; set; }
+    public virtual ICollection<MacroDTO>? Macros { get; set; }
+    public virtual ICollection<SessionDTO>? Sessions { get; set; }
+    public virtual ICollection<PlanDTO>? Plans { get; set; }
+    public virtual ICollection<MediaDTO>? Images { get; set; }
 }
 
 public class LoginResponseDTO

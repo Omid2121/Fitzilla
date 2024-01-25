@@ -2,34 +2,28 @@
 using Fitzilla.BLL.DTOs;
 using Fitzilla.BLL.Services;
 using Fitzilla.DAL.IRepository;
+using Fitzilla.DAL.Models;
 using Fitzilla.Models;
 using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using X.PagedList;
 
 namespace Fitzilla.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize(Roles = "Admin, Consumer")]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-public class MacrosController : ControllerBase
+public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManager macroManager, UserManager<User> userManager) : ControllerBase
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly IMapper _mapper;
-    private readonly MacroManager _macroManager;
-    private readonly UserManager<User> _userManager;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
+    private readonly IMapper _mapper = mapper;
+    private readonly MacroManager _macroManager = macroManager;
+    private readonly UserManager<User> _userManager = userManager;
 
-    public MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManager macroManager, UserManager<User> userManager)
-    {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-        _macroManager = macroManager;
-        _userManager = userManager;
-    }
-
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMacros()
@@ -50,7 +44,26 @@ public class MacrosController : ControllerBase
         return Ok(results);
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
+    [HttpGet("paged")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPagedMacros([FromQuery] RequestParams requestParams)
+    {
+        IPagedList<Macro> macros;
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        if (userRoles.Any(ur => ur.Value == Role.Admin))
+        {
+            macros = await _unitOfWork.Macros.GetPagedList(requestParams);
+        }
+        else
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            macros = await _unitOfWork.Macros.GetPagedList(requestParams, m => m.CreatorId == currentUserId);
+        }
+        var results = _mapper.Map<IList<MacroDTO>>(macros);
+
+        return Ok(results);
+    }
+
     [HttpGet("{macroId}", Name = "GetMacro")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -62,19 +75,18 @@ public class MacrosController : ControllerBase
         var userRoles = User.FindAll(ClaimTypes.Role);
         if (userRoles.Any(ur => ur.Value == Role.Admin))
         {
-            macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(macroId));
+            macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(macroId), includes: ["NutritionInfo"]);
         }
         else
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(macroId));
+            macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(macroId), includes: ["NutritionInfo"]);
         }
         var result = _mapper.Map<MacroDTO>(macro);
 
         return Ok(result);
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -90,16 +102,18 @@ public class MacrosController : ControllerBase
         //var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (macro.CreatorId != currentUser.Id) return Forbid("You are not authorized to create this macro.");
 
-        macro = _macroManager.CalculateMacros(macro, currentUser);
+        macro = _macroManager.CalculateMacro(macro, currentUser);
         if (macro is null) return BadRequest("Invalid payload.");
         
+        macro = _macroManager.CalculateMacroCycleLength(macro, currentUser.Weight);
+        macro.CreatedAt = DateTime.Now;
+
         await _unitOfWork.Macros.Insert(macro);
         await _unitOfWork.Save();
 
         return CreatedAtRoute("GetMacro", new { macroId = macro.Id }, macro);
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpPut("{macroId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> UpdateMacro(Guid macroId, [FromBody] UpdateMacroDTO macroDTO)
@@ -116,16 +130,22 @@ public class MacrosController : ControllerBase
         var userRoles = User.FindAll(ClaimTypes.Role);
         if (userRoles.Any(ur => ur.Value == Role.Admin))
         {   
-            macro = _macroManager.CalculateMacros(macro, currentUser);
+            macro = _macroManager.CalculateMacro(macro, currentUser);
             if (macro is null) return BadRequest("Invalid payload.");
+
+            macro = _macroManager.CalculateMacroCycleLength(macro, currentUser.Weight);
+            macro.ModifiedAt = DateTime.Now;
             _unitOfWork.Macros.Update(macro);
         }
         else
         {
             //var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (macro.CreatorId != currentUser.Id) return Forbid("You are not authorized to update this macro.");
-            macro = _macroManager.CalculateMacros(macro, currentUser);
+            macro = _macroManager.CalculateMacro(macro, currentUser);
             if (macro is null) return BadRequest("Invalid payload.");
+
+            macro = _macroManager.CalculateMacroCycleLength(macro, currentUser.Weight);
+            macro.ModifiedAt = DateTime.Now;
             _unitOfWork.Macros.Update(macro);
         }
         await _unitOfWork.Save();
@@ -133,7 +153,6 @@ public class MacrosController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpDelete("{macroId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteMacro(Guid macroId)
@@ -159,7 +178,6 @@ public class MacrosController : ControllerBase
         return NoContent();
     }
 
-    [Authorize(Roles = "Admin,Consumer")]
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> Search([FromQuery] string searchRequest)

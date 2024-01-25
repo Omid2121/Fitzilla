@@ -2,12 +2,13 @@
 using Fitzilla.DAL.Models;
 using Fitzilla.Models.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using System.Linq.Expressions;
 using X.PagedList;
 
 namespace Fitzilla.DAL.Repository;
 
-public class GenericRepository<T> : IGenericRepository<T> where T : class, IEntity 
+public class GenericRepository<T> : IGenericRepository<T> where T : class, IEntity
 {
     private readonly DatabaseContext _context;
     private readonly DbSet<T> _dbSet;
@@ -67,9 +68,15 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class, IEnti
         return await query.AsNoTracking().ToListAsync();
     }
 
-    public async Task<IPagedList<T>> GetPagedList(RequestParams requestParams, List<string> includes = null)
+    public async Task<IPagedList<T>> GetPagedList(RequestParams requestParams,
+        Expression<Func<T, bool>> expression = null, List<string> includes = null)
     {
         IQueryable<T> query = _dbSet;
+
+        if (expression != null)
+        {
+            query = query.Where(expression);
+        }
 
         if (includes != null)
         {
@@ -94,7 +101,12 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class, IEnti
         entities.Select(entity => entity.Id = Guid.NewGuid());
         await _dbSet.AddRangeAsync(entities);
     }
-    
+
+    public Task<IList<T>> Search(Expression<Func<T, bool>>? predicate, List<string>? includes = null)
+    {
+        throw new NotImplementedException();
+    }
+
     public void Update(T entity)
     {
         _dbSet.Attach(entity);

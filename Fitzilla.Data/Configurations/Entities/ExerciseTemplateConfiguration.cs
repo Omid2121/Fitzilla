@@ -3,22 +3,34 @@ using Fitzilla.Models.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Fitzilla.DAL.Configurations.Entities
-{
-    public class ExerciseTemplateConfiguration : IEntityTypeConfiguration<ExerciseTemplate>
-    {
-        public void Configure(EntityTypeBuilder<ExerciseTemplate> builder)
-        {
-            // Required fields
-            builder.Property(exerciseTemplate => exerciseTemplate.Id).IsRequired();
-            builder.Property(exerciseTemplate => exerciseTemplate.Title).IsRequired().HasMaxLength(40);
-            builder.Property(exerciseTemplate => exerciseTemplate.Description).IsRequired();
-            builder.Property(exerciseTemplate => exerciseTemplate.MediaId).IsRequired();
+namespace Fitzilla.DAL.Configurations.Entities;
 
-            // ExerciseTemplate has a many-to-one relationship with Image
-            builder.HasOne(exerciseTemplate => exerciseTemplate.Media)
-                .WithMany(image => image.ExerciseTemplates)
-                .HasForeignKey(exerciseTemplate => exerciseTemplate.MediaId);
+public class ExerciseTemplateConfiguration : IEntityTypeConfiguration<ExerciseTemplate>
+{
+    public void Configure(EntityTypeBuilder<ExerciseTemplate> builder)
+    {
+        // Required fields
+        builder.Property(exerciseTemplate => exerciseTemplate.Id).IsRequired();
+        builder.Property(exerciseTemplate => exerciseTemplate.Title).IsRequired().HasMaxLength(40);
+        builder.Property(exerciseTemplate => exerciseTemplate.Description).IsRequired();
+
+        // ExerciseTemplate has a many-to-many relationship with Media
+        builder.HasMany(exerciseTemplate => exerciseTemplate.Medias)
+            .WithMany(media => media.ExerciseTemplates)
+            .UsingEntity<Dictionary<string, object>>(
+                "ExerciseTemplateMedia",
+                j => j
+                    .HasOne<Media>()
+                    .WithMany()
+                    .HasForeignKey("MediaId")
+                    .HasConstraintName("FK_ExerciseTemplateMedia_Media_MediaId")
+                    .OnDelete(DeleteBehavior.Cascade),
+                j => j
+                    .HasOne<ExerciseTemplate>()
+                    .WithMany()
+                    .HasForeignKey("ExerciseTemplateId")
+                    .HasConstraintName("FK_ExerciseTemplateMedia_ExerciseTemplate_ExerciseTemplateId")
+                    .OnDelete(DeleteBehavior.ClientCascade));
 
         // ExerciseTemplate has a many-to-one relationship with User
         builder.HasOne(exerciseTemplate => exerciseTemplate.Creator)

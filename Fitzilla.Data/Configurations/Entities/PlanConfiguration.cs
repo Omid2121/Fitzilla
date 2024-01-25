@@ -26,6 +26,6 @@ public class PlanConfiguration : IEntityTypeConfiguration<Plan>
             .WithOne(session => session.Plan)
             .HasForeignKey(exercise => exercise.PlanId);
 
-        builder.HasData(PlanSeedData.Plans());
+        //builder.HasData(PlanSeedData.Plans());
     }
 }

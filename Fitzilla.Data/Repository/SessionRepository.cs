@@ -7,9 +7,6 @@ using System.Threading.Tasks;
 
 namespace Fitzilla.DAL.Repository;
 
-public class SessionRepository : GenericRepository<Session>
+public class SessionRepository(DatabaseContext context) : GenericRepository<Session>(context)
 {
-    public SessionRepository(DatabaseContext context) : base(context)
-    {
-    }
 }

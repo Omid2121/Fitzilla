@@ -10,7 +10,7 @@ namespace Fitzilla.DAL.Repository
     {
         private readonly BlobServiceClient _blobServiceClient;
         private BlobContainerClient _client;
-        private readonly List<string> ImageExtensions = new() { ".JPG", ".JPE", ".BMP", ".GIF", ".PNG", ".TIFF", ".SVG", ".WEBP" };
+        private readonly List<string> ImageExtensions = [".JPG", ".JPE", ".BMP", ".GIF", ".PNG", ".TIFF", ".SVG", ".WEBP"];
 
         public BlobRepository(BlobServiceClient blobServiceClient)
         {
@@ -64,6 +64,53 @@ namespace Fitzilla.DAL.Repository
             }
         }
 
+        public async Task<List<BlobObject>> GetBlobFiles(List<string> paths)
+        {
+            var blobObjects = new List<BlobObject>();
+
+            foreach (var path in paths)
+            {
+                var fileName = new Uri(path).Segments.LastOrDefault();
+
+                try
+                {
+                    var blobClient = _client.GetBlobClient(fileName);
+                    if (await blobClient.ExistsAsync())
+                    {
+                        BlobDownloadResult content = await blobClient.DownloadContentAsync();
+                        var downloadedData = content.Content.ToStream();
+                        if (ImageExtensions.Contains(Path.GetExtension(fileName.ToUpperInvariant())))
+                        {
+                            var extension = Path.GetExtension(fileName);
+                            blobObjects.Add(new BlobObject
+                            {
+                                Content = downloadedData,
+                                ContentType = "image/" + extension.Remove(0, 1),
+                            });
+                        }
+                        else
+                        {
+                            blobObjects.Add(new BlobObject
+                            {
+                                Content = downloadedData,
+                                ContentType = content.Details.ContentType,
+                            });
+                        }
+                    }
+                    else
+                    {
+                        blobObjects.Add(null);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw ex;
+                }
+            }
+
+            return blobObjects;
+        }
+
         public async Task<List<string>> ListBlobs()
         {
             var blobs = new List<string>();
@@ -84,7 +131,6 @@ namespace Fitzilla.DAL.Repository
             return blobClient.Uri.AbsoluteUri;
         }
 
-        // Upload Blob files
         public async Task<List<string>> UploadBlobFiles(List<IFormFile> files)
         {
             var blobUris = new List<string>();

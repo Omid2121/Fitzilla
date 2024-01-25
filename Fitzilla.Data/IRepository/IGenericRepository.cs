@@ -12,6 +12,7 @@ public interface IGenericRepository<T> where T : class, IEntity
         List<string>? includes = null);
 
     Task<IPagedList<T>> GetPagedList(RequestParams requestParams,
+        Expression<Func<T, bool>> expression = null,
         List<string>? includes = null);
 
     Task<T> Get(Expression<Func<T, bool>>? expression,

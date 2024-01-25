@@ -17,18 +17,11 @@ namespace Fitzilla.API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-public class AccountsController : ControllerBase
+public class AccountsController(IMapper mapper, UserManager<User> userManager, IAuthManager authManager) : ControllerBase
 {
-    private readonly IMapper _mapper;
-    private readonly UserManager<User> _userManager;
-    private readonly IAuthManager _authManager;
-
-    public AccountsController(IMapper mapper, UserManager<User> userManager, IAuthManager authManager)
-    {
-        _mapper = mapper;
-        _userManager = userManager;
-        _authManager = authManager;
-    }
+    private readonly IMapper _mapper = mapper;
+    private readonly UserManager<User> _userManager = userManager;
+    private readonly IAuthManager _authManager = authManager;
 
     [AllowAnonymous]
     [HttpPost]

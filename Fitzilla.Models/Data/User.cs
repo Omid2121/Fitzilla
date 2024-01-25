@@ -39,10 +39,33 @@ public class User : IdentityUser
     /// </summary>
     public Measurement Measurement { get; set; }
 
+    /// <summary>
+    /// The relationship between the user and the exercise templates.
+    /// </summary>
     public virtual ICollection<ExerciseTemplate> ExerciseTemplates { get; set; }
+
+    /// <summary>
+    /// The relationship between the user and the exercise.
+    /// </summary>
     public virtual ICollection<Exercise> Exercises { get; set; }
+
+    /// <summary>
+    /// The relationship between the user and the macro.
+    /// </summary>
     public virtual ICollection<Macro> Macros { get; set; }
+
+    /// <summary>
+    /// The relationship between the user and the session.
+    /// </summary>
     public virtual ICollection<Session> Sessions { get; set; }
+
+    /// <summary>
+    /// The relationship between the user and the plan.
+    /// </summary>
     public virtual ICollection<Plan> Plans { get; set; }
+
+    /// <summary>
+    /// The relationship between the user and the media.
+    /// </summary>
     public virtual ICollection<Media> Medias { get; set; }
 }

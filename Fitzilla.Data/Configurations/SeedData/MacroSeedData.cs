@@ -10,25 +10,28 @@ namespace Fitzilla.DAL.Configurations.SeedData;
 
 public static class MacroSeedData
 {
-    public static List<Macro> Macros()
-    {
-        User? user = UserSeedData.Users().FirstOrDefault();
-        return new List<Macro>()
-        {
-            new Macro
-            {
-                Id = Guid.NewGuid(),
-                Title = "Test Macro",
-                ConsumeType = GoalType.SURPLUS,
-                Intensity = ActivityLevel.SEDENTARY,
-                Calorie = 3000,
-                Protein = 70,
-                Carbohydrate = 330,
-                Fat = 45,
-                CreatedAt = DateTime.Now,
-                CreatorId = user.Id,
-                Creator = user,
-            }
-        };
-    }
+    //public static List<Macro> Macros()
+    //{
+    //    User? user = UserSeedData.Users().FirstOrDefault();
+    //    return new List<Macro>()
+    //    {
+    //        new Macro
+    //        {
+    //            Id = Guid.NewGuid(),
+    //            Title = "Test Macro",
+    //            Description = ,
+    //            CreatedAt = DateTimeOffset.Now,
+    //            ModifiedAt = DateTimeOffset.Now,
+    //            GoalWeight = ,
+    //            CycleStartDate = ,
+    //            CycleEndDate = ,
+    //            GoalType = ,
+    //            ActivityLevel = ,
+    //            NutritionInfoId = ,
+    //            NutritionInfo = ,
+    //            CreatorId = user.Id,
+    //            Creator = user
+    //        }
+    //    };
+    //}
 }

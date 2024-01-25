@@ -5,16 +5,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Fitzilla.DAL;
 
-public class DatabaseContext : IdentityDbContext<User>
+public class DatabaseContext(DbContextOptions options) : IdentityDbContext<User>(options)
 {
-    public DatabaseContext(DbContextOptions options) : base(options)
-    { }
-
     public DbSet<Media> Medias { get; set; }
     public DbSet<Macro> Macros { get; set; }
+    public DbSet<NutritionInfo> NutritionInfos { get; set; }
     public DbSet<Session> Sessions { get; set; }
     public DbSet<Plan> Plans { get; set; }
     public DbSet<Exercise> Exercises { get; set; }
+    public DbSet<ExerciseRecord> ExerciseRecords { get; set; }
     public DbSet<ExerciseTemplate> ExerciseTemplates { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -22,6 +21,7 @@ public class DatabaseContext : IdentityDbContext<User>
         base.OnModelCreating(builder);
 
         builder.ApplyConfiguration(new MediaConfiguration());
+        builder.ApplyConfiguration(new ExerciseRecordConfiguration());
         builder.ApplyConfiguration(new ExerciseTemplateConfiguration());
         builder.ApplyConfiguration(new ExerciseConfiguration());
         builder.ApplyConfiguration(new SessionConfiguration());

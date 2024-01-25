@@ -5,35 +5,68 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Fitzilla.BLL.Services;
 
-public class MacroManager
+public class MacroManager()
 {
-    private readonly IUnitOfWork _unitOfWork;
-    private readonly UserManager<User> _userManager;
 
-    public MacroManager(IUnitOfWork unitOfWork, UserManager<User> userManager)
+    public Macro CalculateMacroCycleLength(Macro macro, double currentWeight)
     {
-        _unitOfWork = unitOfWork;
-        _userManager = userManager;
-    }
+        if (macro == null)
+            throw new ArgumentNullException(nameof(macro), "Macro cannot be null.");
 
-    public Macro? CalculateMacros(Macro macro, User user)
-    {
-        macro.Calorie = CalculateBMR(user);
-        macro.Calorie = CalculateActivityLevel(macro);
-        macro.Calorie = CalculateGoalType(macro);
+        if (currentWeight <= 0)
+            throw new Exception("Current weight must be greater than zero.");
 
-        // User's macros (Protein, Carbs, Fat)
-        if (!IsValidMacroPercentage(macro.ProteinPercentage, macro.CarbohydratePercentage, macro.FatPercentage))
-            throw new Exception("Macro percentages should add up to 100%");
+        if (macro.CycleStartDate < DateTimeOffset.Now)
+            throw new Exception("Cycle start date cannot be in the past.");
 
-        macro.ProteinAmount = macro.Calorie * (macro.ProteinPercentage / 100) / 4;
-        macro.CarbohydrateAmount = macro.Calorie * (macro.CarbohydratePercentage / 100) / 4;
-        macro.FatAmount = macro.Calorie * (macro.FatPercentage / 100) / 9;
+        var weightDifference = Math.Abs(macro.GoalWeight - currentWeight);
+
+        if (macro.GoalType != GoalType.Maintenance)
+            macro.CycleEndDate = CalculateCycleEndDate(macro.CycleStartDate, weightDifference, macro.GoalType);
 
         return macro;
     }
 
-    private double CalculateBMR(User user)
+    private static DateTimeOffset CalculateCycleEndDate(DateTimeOffset cycleStartDate, double weightDifference, GoalType goalType)
+    {
+        const double daysInWeek = 7;
+        const double mildWeightLossOrGainMultiplier = 4;
+        const double weightLossOrGainMultiplier = 2;
+        const double extremeWeightLossOrGainMultiplier = 1;
+
+        return goalType switch
+        {
+            GoalType.MildWeightLoss => cycleStartDate.AddDays(weightDifference * daysInWeek * mildWeightLossOrGainMultiplier),
+            GoalType.WeightLoss => cycleStartDate.AddDays(weightDifference * daysInWeek * weightLossOrGainMultiplier),
+            GoalType.ExtremeWeightLoss => cycleStartDate.AddDays(weightDifference * daysInWeek * extremeWeightLossOrGainMultiplier),
+            GoalType.MildWeightGain => cycleStartDate.AddDays(weightDifference * daysInWeek * mildWeightLossOrGainMultiplier),
+            GoalType.WeightGain => cycleStartDate.AddDays(weightDifference * daysInWeek * weightLossOrGainMultiplier),
+            GoalType.ExtremeWeightGain => cycleStartDate.AddDays(weightDifference * daysInWeek * extremeWeightLossOrGainMultiplier),
+            _ => throw new Exception("Invalid goal type."),
+        };
+    }
+
+    public Macro? CalculateMacro(Macro macro, User user)
+    {
+        macro.NutritionInfo.Calorie = CalculateBMR(user);
+        macro.NutritionInfo.Calorie = CalculateActivityLevel(macro);
+        macro.NutritionInfo.Calorie = CalculateGoalType(macro);
+
+        // User's macros (Protein, Carbs, Fat)
+        if (!IsValidMacroPercentage(macro.NutritionInfo))
+            throw new Exception("Macro percentages should add up to 100%");
+
+        // 1 gram of protein = 4 calories
+        macro.NutritionInfo.ProteinAmount = macro.NutritionInfo.Calorie * (macro.NutritionInfo.ProteinPercentage / 100) / 4;
+        // 1 gram of carbs = 4 calories
+        macro.NutritionInfo.CarbohydrateAmount = macro.NutritionInfo.Calorie * (macro.NutritionInfo.CarbohydratePercentage / 100) / 4;
+        // 1 gram of fat = 9 calories
+        macro.NutritionInfo.FatAmount = macro.NutritionInfo.Calorie * (macro.NutritionInfo.FatPercentage / 100) / 9;
+
+        return macro;
+    }
+
+    private static double CalculateBMR(User user)
     {
         int age = DateTime.Now.Year - user.DateOfBirth.Year;
 
@@ -47,64 +80,37 @@ public class MacroManager
         }
     }
 
-    private double CalculateActivityLevel(Macro macro)
+    private static double CalculateActivityLevel(Macro macro)
     {
-        switch (macro.ActivityLevel)
+        return macro.ActivityLevel switch
         {
-            case ActivityLevel.Sedentary:
-                macro.Calorie *= 1.2;
-                break;
-            case ActivityLevel.LightlyActive:
-                macro.Calorie *= 1.375;
-                break;
-            case ActivityLevel.ModeratelyActive:
-                macro.Calorie *= 1.55;
-                break;
-            case ActivityLevel.VigorouslyActive:
-                macro.Calorie *= 1.725;
-                break;
-            case ActivityLevel.VeryActive:
-                macro.Calorie *= 1.9;
-                break;
-            default:
-                break;
-        }
-        return macro.Calorie;
+            ActivityLevel.Sedentary => macro.NutritionInfo.Calorie *= 1.2,
+            ActivityLevel.LightlyActive => macro.NutritionInfo.Calorie *= 1.375,
+            ActivityLevel.ModeratelyActive => macro.NutritionInfo.Calorie *= 1.55,
+            ActivityLevel.VigorouslyActive => macro.NutritionInfo.Calorie *= 1.725,
+            ActivityLevel.VeryActive => macro.NutritionInfo.Calorie *= 1.9,
+            _ => throw new Exception("Invalid activity level."),
+        };
     }
 
-    private double CalculateGoalType(Macro macro)
+    private static double CalculateGoalType(Macro macro)
     {
-        switch (macro.GoalType)
+        return macro.GoalType switch
         {
-            case GoalType.MildWeightLoss:
-                macro.Calorie -= 250;
-                break;
-            case GoalType.WeightLoss:
-                macro.Calorie -= 500;
-                break;
-            case GoalType.ExtremeWeightLoss:
-                macro.Calorie -= 1000;
-                break;
-            case GoalType.Maintenance:
-                break;
-            case GoalType.MildWeightGain:
-                macro.Calorie += 250;
-                break;
-            case GoalType.WeightGain:
-                macro.Calorie += 500;
-                break;
-            case GoalType.ExtremeWeightGain:
-                macro.Calorie += 1000;
-                break;
-            default:
-                break;
-        }
-        return macro.Calorie;
+            GoalType.MildWeightLoss => macro.NutritionInfo.Calorie -= 250,
+            GoalType.WeightLoss => macro.NutritionInfo.Calorie -= 500,
+            GoalType.ExtremeWeightLoss => macro.NutritionInfo.Calorie -= 1000,
+            GoalType.Maintenance => macro.NutritionInfo.Calorie,
+            GoalType.MildWeightGain => macro.NutritionInfo.Calorie += 250,
+            GoalType.WeightGain => macro.NutritionInfo.Calorie += 500,
+            GoalType.ExtremeWeightGain => macro.NutritionInfo.Calorie += 1000,
+            _ => throw new Exception("Invalid goal type."),
+        };
     }
 
-    private bool IsValidMacroPercentage(int proteinPercentage, int carbohydratePercentage, int fatPercentage)
+    private static bool IsValidMacroPercentage(NutritionInfo nutritionInfo)
     {
-        return proteinPercentage + carbohydratePercentage + fatPercentage == 100;
+        return Math.Abs(nutritionInfo.ProteinPercentage + nutritionInfo.CarbohydratePercentage + nutritionInfo.FatPercentage) == 100;
     }
 
 }
