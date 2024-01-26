@@ -8,46 +8,36 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit.Abstractions;
 
-namespace Fitzilla.Tests.Integration.Repositories
+namespace Fitzilla.Tests.Integration.Repositories;
+
+public class ExerciseRepositoryTests(ITestOutputHelper testOutputHelper) : GenericRepositoryTests<Exercise>(testOutputHelper)
 {
-    public class ExerciseRepositoryTests : GenericRepositoryTests<Exercise>
+    protected override GenericRepository<Exercise> Repository => UnitOfWork.Exercises;
+
+    User user = new();
+    Guid exerciseId = Guid.NewGuid();
+    protected override Exercise CreateModel()
     {
-        protected override GenericRepository<Exercise> Repository => throw new NotImplementedException();
-        
-        public ExerciseRepositoryTests(ITestOutputHelper testOutputHelper) : base(testOutputHelper)
+        return new Exercise()
         {
-        }
-
-        protected override Exercise CreateModel()
-        {
-            throw new NotImplementedException();
-        }
-
-        //protected override GenericRepository<Exercise> Repo => UnitOfWork.Exercises;
-
-        //protected override Exercise CreateModel()
-        //{
-        //    return new Exercise()
-        //    {
-        //        Id = Guid.NewGuid(),
-        //        Title = "Test Exercise",
-        //        Description = "Test Description",
-        //        CreatedAt = DateTimeOffset.Now,
-        //        CreatorId = Guid.NewGuid().ToString(),
-        //        Creator = new User()
-        //        {
-        //            Id = Guid.NewGuid().ToString(),
-        //            FirstName = "Test",
-        //            LastName = "User",
-        //            Email = "testmail@gmail.com",
-        //            DateOfBirth = DateTime.Now,
-        //            Gender = Gender.Male,
-        //            Weight = 60, 
-        //            Height = 160,
-        //            Measurement = Measurement.Metric,
-
-        //        }
-        //    };
-        //}
+            Id = exerciseId,
+            Title = "Test Exercise",
+            Description = "Test Description",
+            CreatedAt = DateTimeOffset.Now,
+            Set = 3,
+            CreatorId = user.Id,
+            Creator = user,
+            Equipment = Equipment.Barbell,
+            TargetMuscles = new List<TargetMuscle> { TargetMuscle.Abdominals, TargetMuscle.MiddleBack },
+            ExerciseRecords = new List<ExerciseRecord>
+            {
+                new() {
+                    Id = Guid.NewGuid(),
+                    Rep = 10,
+                    Weight = 50,
+                    ExerciseId = exerciseId,
+                },
+            }
+        };
     }
 }

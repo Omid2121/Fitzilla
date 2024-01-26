@@ -105,7 +105,7 @@ public class ExercisesController(IUnitOfWork unitOfWork, IMapper mapper, IBlobRe
 
         return CreatedAtRoute("GetExercise", new { exerciseId = exercise.Id }, exercise);
     }
-
+    
     [HttpPost("session/{sessionId}")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

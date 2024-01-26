@@ -20,7 +20,7 @@ public class CreateExerciseDTO
     public double Weight { get; set; }
 
     [Required]
-    public virtual ICollection<TargetedMuscle> TargetedMuscles { get; set; }
+    public virtual ICollection<TargetMuscle> TargetMuscles { get; set; }
 
     public Guid? SessionId { get; set; }
 

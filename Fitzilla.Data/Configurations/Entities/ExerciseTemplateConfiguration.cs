@@ -13,6 +13,8 @@ public class ExerciseTemplateConfiguration : IEntityTypeConfiguration<ExerciseTe
         builder.Property(exerciseTemplate => exerciseTemplate.Id).IsRequired();
         builder.Property(exerciseTemplate => exerciseTemplate.Title).IsRequired().HasMaxLength(40);
         builder.Property(exerciseTemplate => exerciseTemplate.Description).IsRequired();
+        builder.Property(exerciseTemplate => exerciseTemplate.Equipment).IsRequired();
+        builder.Property(exerciseTemplate => exerciseTemplate.CreatorId).IsRequired();
 
         // ExerciseTemplate has a many-to-many relationship with Media
         builder.HasMany(exerciseTemplate => exerciseTemplate.Medias)
@@ -37,6 +39,6 @@ public class ExerciseTemplateConfiguration : IEntityTypeConfiguration<ExerciseTe
             .WithMany(user => user.ExerciseTemplates)
             .HasForeignKey(exerciseTemplate => exerciseTemplate.CreatorId);
 
-        builder.HasData(ExerciseTemplateSeedData.ExerciseTemplates());
+        //builder.HasData(ExerciseTemplateSeedData.ExerciseTemplates());
     }
 }

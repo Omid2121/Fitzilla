@@ -25,7 +25,7 @@ public static class ExerciseSeedData
     //            SessionId = ,
     //            Session = ,
     //            CreatorId = user.Id,
-    //            TargetedMuscles = ,
+    //            TargetMuscles = ,
     //            Creator = user,
     //            ExerciseRecords = ,
     //            Medias = 

@@ -1,18 +1,10 @@
 ﻿using Fitzilla.DAL.Configurations.SeedData;
-using Fitzilla.DAL.DTOs;
 using Fitzilla.Models.Data;
-using Fitzilla.Models.Enums;
-using FluentAssertions;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
-using System.Threading.Tasks;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace Fitzilla.Tests.Integration.Controllers
 {

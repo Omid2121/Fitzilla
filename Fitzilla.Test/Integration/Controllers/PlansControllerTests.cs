@@ -118,7 +118,7 @@ namespace Fitzilla.Tests.Integration.Controllers
                 Id = Workouts[0].Id,
                 Name = "Updated Workout",
                 Description = "Updated Workout description",
-                TargetMuscle = TargetedMuscle.BACK,
+                TargetMuscle = TargetMuscle.BACK,
                 CreatedAt = Workouts[0].CreatedAt,
                 ModifiedAt = DateTime.Now,
                 CreatorId = Workouts[0].CreatorId,

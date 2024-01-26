@@ -8,11 +8,6 @@ public class ExerciseRecord : IEntity
     public Guid Id { get; set; }
 
     /// <summary>
-    /// The number of sets for the exercise.
-    /// </summary>
-    public int Set { get; set; }
-
-    /// <summary>
     /// The number of reps for the exercise.
     /// </summary>
     public int Rep { get; set; }

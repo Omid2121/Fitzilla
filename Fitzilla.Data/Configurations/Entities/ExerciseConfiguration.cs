@@ -12,6 +12,8 @@ public class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
         // Required fields
         builder.Property(exercise => exercise.Id).IsRequired();
         builder.Property(exercise => exercise.Title).IsRequired().HasMaxLength(40);
+        builder.Property(exercise => exercise.Set).IsRequired();
+        builder.Property(exercise => exercise.Equipment).IsRequired();
         builder.Property(exercise => exercise.CreatorId).IsRequired();
 
         // Exercise has a one-to-many relationship with ExerciseRecord

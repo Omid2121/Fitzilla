@@ -11,9 +11,10 @@ public class CreateExerciseTemplateDTO
     public string? Description { get; set; }
 
     [Required]
-    public virtual ICollection<TargetedMuscle> TargetedMuscles { get; set; }
-    
-    public string? CreatorId { get; set; }
+    public virtual ICollection<TargetMuscle> TargetMuscles { get; set; }
+
+    [Required] 
+    public string CreatorId { get; set; }
 
     public virtual ICollection<MediaDTO>? Medias { get; set; }
 }
@@ -26,7 +27,7 @@ public class ExerciseTemplateDTO : CreateExerciseTemplateDTO
 
     public DateTimeOffset? ModifiedAt { get; set; }
     
-    public string? CreatorEmail { get; set; }
+    public string CreatorEmail { get; set; }
 }
 
 public class UpdateExerciseTemplateDTO : CreateExerciseTemplateDTO

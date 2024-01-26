@@ -15,7 +15,6 @@ namespace Fitzilla.DAL.Configurations.Entities
         {
             // Required fields
             builder.Property(exerciseRecord => exerciseRecord.Id).IsRequired();
-            builder.Property(exerciseRecord => exerciseRecord.Set).IsRequired();
             builder.Property(exerciseRecord => exerciseRecord.Rep).IsRequired();
             builder.Property(exerciseRecord => exerciseRecord.Weight).IsRequired();
             builder.Property(exerciseRecord => exerciseRecord.ExerciseId).IsRequired();

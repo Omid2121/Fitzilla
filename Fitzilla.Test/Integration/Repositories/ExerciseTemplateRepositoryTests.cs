@@ -5,12 +5,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Xunit.Abstractions;
 
 namespace Fitzilla.Tests.Integration.Repositories
 {
-    public class ExerciseTemplateRepositoryTests : GenericRepositoryTests<ExerciseTemplate>
+    public class ExerciseTemplateRepositoryTests(ITestOutputHelper testOutputHelper) : GenericRepositoryTests<ExerciseTemplate>(testOutputHelper)
     {
-        protected override GenericRepository<ExerciseTemplate> Repo => UnitOfWork.ExerciseTemplates;
+        protected override GenericRepository<ExerciseTemplate> Repository => UnitOfWork.ExerciseTemplates;
+
 
         protected override ExerciseTemplate CreateModel()
         {

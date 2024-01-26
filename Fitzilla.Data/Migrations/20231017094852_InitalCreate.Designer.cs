@@ -1350,7 +1350,7 @@ namespace Fitzilla.DAL.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("TargetedMuscle")
+                    b.Property<int>("TargetMuscle")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

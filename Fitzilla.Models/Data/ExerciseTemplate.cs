@@ -7,13 +7,18 @@ public class ExerciseTemplate : EntityDetail
     /// <summary>
     /// The relationship between the exercise temaplte and the creator.
     /// </summary>
-    public string? CreatorId { get; set; }
-    public virtual User? Creator { get; set; }
+    public string CreatorId { get; set; }
+    public virtual User Creator { get; set; }
+
+    /// <summary>
+    /// The Equipment required for the exercise template.
+    /// </summary>
+    public Equipment Equipment { get; set; }
 
     /// <summary>
     /// List of targeted muscles for the exercise.
     /// </summary>
-    public virtual ICollection<TargetedMuscle> TargetedMuscles { get; set; }
+    public virtual ICollection<TargetMuscle> TargetMuscles { get; set; }
 
     /// <summary>
     /// The relationship between the exercise and the media.
