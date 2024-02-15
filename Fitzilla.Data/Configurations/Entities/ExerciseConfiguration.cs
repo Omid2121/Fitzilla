@@ -48,7 +48,5 @@ public class ExerciseConfiguration : IEntityTypeConfiguration<Exercise>
         builder.HasOne(exercise => exercise.Creator)
             .WithMany(user => user.Exercises)
             .HasForeignKey(exercise => exercise.CreatorId);
-
-        //builder.HasData(ExerciseSeedData.Exercises());
     }
 }

@@ -36,9 +36,9 @@ public class SessionDTO : CreateSessionDTO
     public bool IsActive { get; set; }
     
     public DateTimeOffset? ActivatedAt { get; set; }
-    
-    public DateTimeOffset? DeactivatedAt { get; set; }
-    
+
+    public DateTimeOffset? FinishedAt { get; set; }
+
     public string PlanTitle { get; set; }
 
     public string CreatorEmail { get; set; }
@@ -52,6 +52,10 @@ public class UpdateSessionDTO
     public string Title { get; set; }
 
     public string? Description { get; set; }
+
+    public DateTimeOffset? ActivatedAt { get; set; }
+
+    public DateTimeOffset? DeactivatedAt { get; set; }
 
     [Required]
     public ICollection<ActivityType> ActivityTypes { get; set; }

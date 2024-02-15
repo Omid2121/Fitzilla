@@ -2,11 +2,13 @@
 using Fitzilla.BLL.DTOs;
 using Fitzilla.DAL.IRepository;
 using Fitzilla.DAL.Models;
-using Fitzilla.Models;
+using Fitzilla.Models.Constants;
 using Fitzilla.Models.Data;
+using Fitzilla.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using X.PagedList;
 
 namespace Fitzilla.API.Controllers;
 
@@ -40,9 +42,9 @@ public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper,
         return Ok(results);
     }
 
-    [HttpGet("{exerciseTemplateId}", Name = "GetExerciseTemplate")]
+    [HttpGet("{exerciseTemplateId}", Name = "GetExerciseTemplateById")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetExerciseTemplate(Guid exerciseTemplateId)
+    public async Task<IActionResult> GetExerciseTemplateById(Guid exerciseTemplateId)
     {
         if (exerciseTemplateId == Guid.Empty) return BadRequest("Submitted data is invalid.");
 
@@ -63,11 +65,12 @@ public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper,
         if (!ModelState.IsValid) return BadRequest($"Invalid payload: {ModelState}");
 
         var exerciseTemplate = _mapper.Map<ExerciseTemplate>(exerciseTemplateDTO);
+        exerciseTemplate.CreatedAt = DateTimeOffset.Now;
 
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (currentUserId == null || exerciseTemplate.CreatorId != currentUserId) 
+        if (currentUserId == null || exerciseTemplate.CreatorId != currentUserId)
             return Forbid("You are not authorized to create this exercise template.");
-        
+
         //TODO: Test following code.
         var transaction = _unitOfWork.BeginTransaction();
         try
@@ -92,8 +95,28 @@ public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper,
             transaction.Rollback();
             throw;
         }
-        
-        return CreatedAtRoute("GetExerciseTemplate", new { exerciseTemplateId = exerciseTemplate.Id }, exerciseTemplate);
+
+        return CreatedAtRoute("GetExerciseTemplateById", new { exerciseTemplateId = exerciseTemplate.Id }, exerciseTemplate);
+    }
+
+    [HttpPost("{exerciseTemplateId}/ratings")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateExerciseTemplateRating(Guid exerciseTemplateId, [FromBody] CreateRatingDTO ratingDTO)
+    {
+        if (!ModelState.IsValid || exerciseTemplateId == Guid.Empty) return BadRequest($"Invalid payload: {ModelState}");
+
+        var exerciseTemplate = await _unitOfWork.ExerciseTemplates.Get(e => e.Id.Equals(exerciseTemplateId));
+        if (exerciseTemplate == null) return NotFound($"Exercise with id {exerciseTemplateId} not found.");
+
+        var rating = _mapper.Map<Rating>(ratingDTO);
+        rating.CreatedAt = DateTimeOffset.Now;
+        rating.ExerciseTemplateId = exerciseTemplateId;
+
+        await _unitOfWork.Ratings.Insert(rating);
+        await _unitOfWork.Save();
+
+        return CreatedAtRoute("GetExerciseTemplateById", new { exerciseTemplateId = exerciseTemplateId }, rating);
     }
 
     [HttpPut("{exerciseTemplateId}")]
@@ -107,6 +130,7 @@ public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper,
         if (exerciseTemplate == null) return NotFound($"Exercise with id {exerciseTemplateId} not found.");
 
         _mapper.Map(exerciseTemplateDTO, exerciseTemplate);
+        exerciseTemplate.ModifiedAt = DateTimeOffset.Now;
 
         var userRoles = User.FindAll(ClaimTypes.Role);
         if (userRoles.Any(ur => ur.Value == Role.Admin))
@@ -163,29 +187,63 @@ public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper,
 
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Search([FromQuery] string searchRequest)
+    public async Task<IActionResult> SearchExerciseTemplates([FromQuery] string searchRequest)
     {
         if (string.IsNullOrEmpty(searchRequest)) return BadRequest("Submitted data is invalid.");
 
-        IList<ExerciseTemplate> exerciseTemplates;
         searchRequest = searchRequest.ToLower();
-        var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(ur => ur.Value == Role.Admin))
-        {
-            exerciseTemplates = await _unitOfWork.ExerciseTemplates.GetAll(
-                et => et.Title.Equals(searchRequest),
-                includes: ["Medias"]);
-        }
-        else
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            exerciseTemplates = await _unitOfWork.ExerciseTemplates.GetAll(
-                et => et.CreatorId == currentUserId &&
-                et.Title.Equals(searchRequest),
-                includes: ["Medias"]);
-        }
+        var exerciseTemplates = await _unitOfWork.ExerciseTemplates.GetAll(
+            et => et.Title.Equals(searchRequest),
+            includes: ["Medias"]);
         var results = _mapper.Map<IList<ExerciseTemplateDTO>>(exerciseTemplates);
 
         return Ok(exerciseTemplates);
+    }
+
+    [HttpGet("sort")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SortExerciseTemplates([FromQuery] SortOption sortRequest, [FromQuery] RequestParams requestParams)
+    {
+        var exerciseTemplates = await _unitOfWork.ExerciseTemplates.GetPagedList(requestParams,
+            orderBy: et => sortRequest switch
+            {
+                SortOption.Alphabetical => et.OrderBy(exerciseTemplate => exerciseTemplate.Title),
+                SortOption.ReverseAlphabetical => et.OrderByDescending(exerciseTemplate => exerciseTemplate.Title),
+                SortOption.MostPopular => et.OrderByDescending(exerciseTemplate => exerciseTemplate.Ratings!.Count > 0 ? exerciseTemplate.Ratings.Average(rating => rating.Value) : 0),
+                SortOption.MostRecent => et.OrderByDescending(exerciseTemplate => exerciseTemplate.CreatedAt),
+                SortOption.Oldest => et.OrderBy(exerciseTemplate => exerciseTemplate.CreatedAt),
+                _ => et.OrderBy(exerciseTemplate => exerciseTemplate.Title)
+            },
+            includes: ["Medias"]);
+
+        var results = _mapper.Map<IList<ExerciseTemplateDTO>>(exerciseTemplates);
+
+        return Ok(results);
+    }
+
+    [HttpGet("filter")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> FilterExerciseTemplates([FromQuery] ExerciseFilterQuery filterRequest, [FromQuery] RequestParams requestParams)
+    {
+        if (filterRequest.TargetMuscles.Count == 0 && filterRequest.Equipments.Count == 0) return BadRequest("Submitted data is invalid.");
+
+        var exerciseTemplates = await _unitOfWork.ExerciseTemplates.GetPagedList(requestParams, includes: ["Medias"]);
+
+        if (filterRequest.TargetMuscles.Count > 0)
+        {
+            exerciseTemplates = (IPagedList<ExerciseTemplate>)exerciseTemplates.Where(
+                et => et.TargetMuscles.Any(tm => filterRequest.TargetMuscles.Contains(tm))).ToList();
+        }
+
+        if (filterRequest.Equipments.Count > 0)
+        {
+            exerciseTemplates = (IPagedList<ExerciseTemplate>)exerciseTemplates.Where(
+                et => filterRequest.Equipments.Contains(et.Equipment)).ToList();
+        }
+
+        var results = _mapper.Map<IList<ExerciseTemplateDTO>>(exerciseTemplates);
+
+        return Ok(results);
     }
 }

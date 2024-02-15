@@ -16,7 +16,7 @@ public class CreateMacroDTO
     [Required] 
     public DateTimeOffset CycleStartDate { get; set; }
 
-    public DateTimeOffset CycleEndDate { get; set; }
+    public DateTimeOffset? CycleEndDate { get; set; }
 
     [Required]
     public GoalType GoalType { get; set; }

@@ -69,7 +69,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class, IEnti
     }
 
     public async Task<IPagedList<T>> GetPagedList(RequestParams requestParams,
-        Expression<Func<T, bool>> expression = null, List<string> includes = null)
+        Expression<Func<T, bool>> expression = null, 
+        Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, List<string> includes = null)
     {
         IQueryable<T> query = _dbSet;
 
@@ -85,7 +86,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class, IEnti
                 query = query.Include(includeProperty);
             }
         }
-
+        if (orderBy != null)
+        {
+            query = orderBy(query);
+        }
+        
         return await query.AsNoTracking()
             .ToPagedListAsync(requestParams.PageNumber, requestParams.PageSize);
     }
@@ -111,5 +116,14 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class, IEnti
     {
         _dbSet.Attach(entity);
         _context.Entry(entity).State = EntityState.Modified;
+    }
+
+    public void UpdateRange(IEnumerable<T>? entities)
+    {
+        _dbSet.AttachRange(entities);
+        foreach (var entity in entities)
+        {
+            _context.Entry(entity).State = EntityState.Modified;
+        }
     }
 }

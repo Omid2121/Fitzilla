@@ -1,7 +1,9 @@
 ﻿using Fitzilla.DAL.IRepository;
+using Fitzilla.DAL.Models;
 using Fitzilla.Models.Data;
 using Fitzilla.Models.Enums;
 using Microsoft.AspNetCore.Identity;
+using X.PagedList;
 
 namespace Fitzilla.BLL.Services;
 
@@ -112,5 +114,33 @@ public class MacroManager()
     {
         return Math.Abs(nutritionInfo.ProteinPercentage + nutritionInfo.CarbohydratePercentage + nutritionInfo.FatPercentage) == 100;
     }
+    public IOrderedQueryable<Macro> SortMacrosByOptions(SortOption sortOption, IQueryable<Macro> macros)
+    {
+        return sortOption switch
+        {
+            SortOption.Alphabetical => macros.OrderBy(macro => macro.Title),
+            SortOption.ReverseAlphabetical => macros.OrderByDescending(macro => macro.Title),
+            SortOption.MostRecent => macros.OrderByDescending(macro => macro.CreatedAt),
+            SortOption.Oldest => macros.OrderBy(macro => macro.CreatedAt),
+            _ => macros.OrderBy(macro => macro.Title),
+        };
+    }
+
+    public IPagedList<Macro> FilterMacrosByQuery(MacroFilterQuery filterQuery, IPagedList<Macro> macros)
+    {
+        if (filterQuery.goalTypes.Count > 0)
+        {
+            macros = (IPagedList<Macro>)macros.Where(
+                m => filterQuery.goalTypes.Contains(m.GoalType)).ToList();
+        }
+
+        if (filterQuery.ActivityLevels.Count > 0)
+        {
+            macros = (IPagedList<Macro>)macros.Where(
+                m => filterQuery.ActivityLevels.Contains(m.ActivityLevel)).ToList();
+        }
+        return macros;
+    }
+
 
 }

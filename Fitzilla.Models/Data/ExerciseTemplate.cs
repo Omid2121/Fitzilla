@@ -16,6 +16,11 @@ public class ExerciseTemplate : EntityDetail
     public Equipment Equipment { get; set; }
 
     /// <summary>
+    /// List of ratings for the exercise template.
+    /// </summary>
+    public virtual ICollection<Rating>? Ratings { get; set; }
+
+    /// <summary>
     /// List of targeted muscles for the exercise.
     /// </summary>
     public virtual ICollection<TargetMuscle> TargetMuscles { get; set; }

@@ -39,6 +39,11 @@ public class ExerciseTemplateConfiguration : IEntityTypeConfiguration<ExerciseTe
             .WithMany(user => user.ExerciseTemplates)
             .HasForeignKey(exerciseTemplate => exerciseTemplate.CreatorId);
 
+        // ExerciseTemplate has a one-to-many relationship with Rating
+        builder.HasMany(exerciseTemplate => exerciseTemplate.Ratings)
+            .WithOne(rating => rating.ExerciseTemplate)
+            .HasForeignKey(rating => rating.ExerciseTemplateId);
+
         //builder.HasData(ExerciseTemplateSeedData.ExerciseTemplates());
     }
 }

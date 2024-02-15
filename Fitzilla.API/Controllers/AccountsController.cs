@@ -2,14 +2,12 @@
 using Fitzilla.BLL.DTOs;
 using Fitzilla.BLL.Services;
 using Fitzilla.DAL.Models;
-using Fitzilla.Models;
+using Fitzilla.Models.Constants;
 using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using System.Data;
 using System.Security.Claims;
 
 namespace Fitzilla.API.Controllers;

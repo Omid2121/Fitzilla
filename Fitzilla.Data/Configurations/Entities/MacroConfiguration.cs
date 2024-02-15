@@ -29,7 +29,5 @@ public class MacroConfiguration : IEntityTypeConfiguration<Macro>
         builder.HasOne(macro => macro.Creator)
             .WithMany(user => user.Macros)
             .HasForeignKey(macro => macro.CreatorId);
-
-        //builder.HasData(MacroSeedData.Macros());
     }
 }

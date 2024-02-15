@@ -7,7 +7,7 @@ public class Session : EntityDetail
     /// <summary>
     /// Boolean value to determine if the session is active.
     /// </summary>
-    public bool IsActive { get; set; }
+    public bool IsActive { get; set; } = false;
 
     /// <summary>
     /// The date and time the session was activated.
@@ -15,15 +15,15 @@ public class Session : EntityDetail
     public DateTimeOffset? ActivatedAt { get; set; }
 
     /// <summary>
-    /// The date and time the session was deactivated.
+    /// The date and time the session was finished at.
     /// </summary>
-    public DateTimeOffset? DeactivatedAt { get; set; }
+    public DateTimeOffset? FinishedAt { get; set; }
 
     /// <summary>
     /// The relationship between the session and the plan.
     /// </summary>
-    public Guid PlanId { get; set; }
-    public virtual Plan Plan { get; set; }
+    public Guid? PlanId { get; set; }
+    public virtual Plan? Plan { get; set; }
 
     /// <summary>
     /// The relationship between the session and the creator.

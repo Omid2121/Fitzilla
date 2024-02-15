@@ -14,10 +14,7 @@ public class CreateExerciseDTO
     public int Set { get; set; }
 
     [Required]
-    public int Rep { get; set; }
-    
-    [Required]
-    public double Weight { get; set; }
+    public Equipment Equipment { get; set; }
 
     [Required]
     public virtual ICollection<TargetMuscle> TargetMuscles { get; set; }
@@ -25,7 +22,10 @@ public class CreateExerciseDTO
     public Guid? SessionId { get; set; }
 
     public string CreatorId { get; set; }
-    
+
+    [Required]
+    public virtual ICollection<CreateExerciseRecordDTO> ExerciseRecords { get; set; }
+
     public virtual ICollection<MediaDTO>? Medias { get; set; }
 }
 
@@ -40,6 +40,10 @@ public class ExerciseDTO : CreateExerciseDTO
     public string CreatorEmail { get; set; }
 
     public string SessionTitle { get; set; }
+
+    public virtual ICollection<ExerciseRecordDTO> ExerciseRecords { get; set; }
+
+    public virtual ICollection<MediaDTO>? Medias { get; set; }
 }
 
 public class UpdateExerciseDTO : CreateExerciseDTO

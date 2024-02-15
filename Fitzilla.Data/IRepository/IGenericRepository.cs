@@ -13,6 +13,7 @@ public interface IGenericRepository<T> where T : class, IEntity
 
     Task<IPagedList<T>> GetPagedList(RequestParams requestParams,
         Expression<Func<T, bool>> expression = null,
+        Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
         List<string>? includes = null);
 
     Task<T> Get(Expression<Func<T, bool>>? expression,
@@ -23,6 +24,7 @@ public interface IGenericRepository<T> where T : class, IEntity
     Task Delete(Guid id);
     void DeleteRange(IEnumerable<T>? entities);
     void Update(T entity);
+    void UpdateRange(IEnumerable<T>? entities);
     Task<IList<T>> Search(Expression<Func<T, bool>>? predicate,
         List<string>? includes = null);
 }

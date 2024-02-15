@@ -36,11 +36,11 @@ public class MediasController(IUnitOfWork unitOfWork, IBlobRepository blobReposi
         return Ok(medias);
     }
 
-    [HttpGet("GetMediaFile", Name = "GetMedia")]
+    [HttpGet("GetMediaFile", Name = "GetMediaByPath")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetMedia(string path)
+    public async Task<IActionResult> GetMediaByPath(string path)
     {
         if (path == null) return BadRequest("Submitted data is invalid.");
 

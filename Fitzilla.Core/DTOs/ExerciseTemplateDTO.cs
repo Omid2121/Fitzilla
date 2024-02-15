@@ -11,6 +11,9 @@ public class CreateExerciseTemplateDTO
     public string? Description { get; set; }
 
     [Required]
+    public Equipment Equipment { get; set; }
+
+    [Required]
     public virtual ICollection<TargetMuscle> TargetMuscles { get; set; }
 
     [Required] 

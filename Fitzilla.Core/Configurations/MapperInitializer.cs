@@ -12,6 +12,10 @@ public class MapperInitializer : Profile
         CreateMap<Exercise, CreateExerciseDTO>().ReverseMap();
         CreateMap<Exercise, UpdateExerciseDTO>().ReverseMap();
 
+        CreateMap<ExerciseRecord, ExerciseRecordDTO>().ReverseMap();
+        CreateMap<ExerciseRecord, CreateExerciseRecordDTO>().ReverseMap();
+        CreateMap<ExerciseRecord, UpdateExerciseRecordDTO>().ReverseMap();
+
         CreateMap<ExerciseTemplate, ExerciseTemplateDTO>().ReverseMap();
         CreateMap<ExerciseTemplate, CreateExerciseTemplateDTO>().ReverseMap();
         CreateMap<ExerciseTemplate, UpdateExerciseTemplateDTO>().ReverseMap();
@@ -19,6 +23,10 @@ public class MapperInitializer : Profile
         CreateMap<Media, MediaDTO>().ReverseMap();
         CreateMap<Media, CreateMediaDTO>().ReverseMap();
         CreateMap<Media, UpdateMediaDTO>().ReverseMap();
+
+        CreateMap<Rating, RatingDTO>().ReverseMap();
+        CreateMap<Rating, CreateRatingDTO>().ReverseMap();
+        CreateMap<Rating, UpdateRatingDTO>().ReverseMap();
 
         CreateMap<Session, SessionDTO>().ReverseMap();
         CreateMap<Session, CreateSessionDTO>().ReverseMap();

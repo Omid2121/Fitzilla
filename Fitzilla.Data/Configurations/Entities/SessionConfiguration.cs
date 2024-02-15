@@ -12,7 +12,6 @@ public class SessionConfiguration : IEntityTypeConfiguration<Session>
         builder.Property(session => session.Id).IsRequired();
         builder.Property(session => session.Title).IsRequired().HasMaxLength(50);
         builder.Property(session => session.IsActive).IsRequired();
-        builder.Property(session => session.PlanId).IsRequired();
         builder.Property(session => session.CreatorId).IsRequired();
 
         // Session has a one-to-many relationship with Plan

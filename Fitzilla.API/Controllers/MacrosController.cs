@@ -3,8 +3,9 @@ using Fitzilla.BLL.DTOs;
 using Fitzilla.BLL.Services;
 using Fitzilla.DAL.IRepository;
 using Fitzilla.DAL.Models;
-using Fitzilla.Models;
+using Fitzilla.Models.Constants;
 using Fitzilla.Models.Data;
+using Fitzilla.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -63,11 +64,11 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
 
         return Ok(results);
     }
-
-    [HttpGet("{macroId}", Name = "GetMacro")]
+    
+    [HttpGet("{macroId}", Name = "GetMacroById")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> GetMacro(Guid macroId)
+    public async Task<IActionResult> GetMacroById(Guid macroId)
     {
         if (macroId == Guid.Empty) return BadRequest("Submitted data is invalid.");
 
@@ -106,12 +107,12 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
         if (macro is null) return BadRequest("Invalid payload.");
         
         macro = _macroManager.CalculateMacroCycleLength(macro, currentUser.Weight);
-        macro.CreatedAt = DateTime.Now;
+        macro.CreatedAt = DateTimeOffset.Now;
 
         await _unitOfWork.Macros.Insert(macro);
         await _unitOfWork.Save();
 
-        return CreatedAtRoute("GetMacro", new { macroId = macro.Id }, macro);
+        return CreatedAtRoute("GetMacroById", new { macroId = macro.Id }, macro);
     }
 
     [HttpPut("{macroId}")]
@@ -134,7 +135,7 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
             if (macro is null) return BadRequest("Invalid payload.");
 
             macro = _macroManager.CalculateMacroCycleLength(macro, currentUser.Weight);
-            macro.ModifiedAt = DateTime.Now;
+            macro.ModifiedAt = DateTimeOffset.Now;
             _unitOfWork.Macros.Update(macro);
         }
         else
@@ -145,7 +146,7 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
             if (macro is null) return BadRequest("Invalid payload.");
 
             macro = _macroManager.CalculateMacroCycleLength(macro, currentUser.Weight);
-            macro.ModifiedAt = DateTime.Now;
+            macro.ModifiedAt = DateTimeOffset.Now;
             _unitOfWork.Macros.Update(macro);
         }
         await _unitOfWork.Save();
@@ -180,7 +181,7 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
 
     [HttpGet("search")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Search([FromQuery] string searchRequest)
+    public async Task<IActionResult> SearchMacros([FromQuery] string searchRequest)
     {
         if (string.IsNullOrEmpty(searchRequest)) return BadRequest("Submitted data is invalid.");
 
@@ -198,6 +199,56 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
             macros = await _unitOfWork.Macros.GetAll(
                 m => m.CreatorId == currentUserId && 
                 m.Title.Equals(searchRequest));
+        }
+        var results = _mapper.Map<IList<MacroDTO>>(macros);
+
+        return Ok(results);
+    }
+
+    [HttpGet("sort")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> SortMacros([FromQuery] SortOption sortOption, [FromQuery] RequestParams requestParams)
+    {
+        IPagedList<Macro> macros;
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        if (userRoles.Any(ur => ur.Value == Role.Admin))
+        {
+            macros = await _unitOfWork.Macros.GetPagedList(requestParams,
+                orderBy: m => _macroManager.SortMacrosByOptions(sortOption, m));
+        }
+        else
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            macros = await _unitOfWork.Macros.GetPagedList(requestParams,
+                m => m.CreatorId == currentUserId,
+                orderBy: m => _macroManager.SortMacrosByOptions(sortOption, m));
+        }
+        var results = _mapper.Map<IList<MacroDTO>>(macros);
+
+        return Ok(results);
+    }
+
+    [HttpGet("filter")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> FilterMacros([FromQuery] MacroFilterQuery filterQuery, [FromQuery] RequestParams requestParams)
+    {
+        if (filterQuery.goalTypes.Count == 0 && filterQuery.ActivityLevels.Count == 0) return BadRequest("Submitted data is invalid.");
+
+        IPagedList<Macro> macros;
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        if (userRoles.Any(ur => ur.Value == Role.Admin))
+        {
+            macros = await _unitOfWork.Macros.GetPagedList(requestParams);
+
+            macros = _macroManager.FilterMacrosByQuery(filterQuery, macros);
+        }
+        else
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            macros = await _unitOfWork.Macros.GetPagedList(requestParams, m => m.CreatorId == currentUserId);
+
+            macros = _macroManager.FilterMacrosByQuery(filterQuery, macros);
         }
         var results = _mapper.Map<IList<MacroDTO>>(macros);
 

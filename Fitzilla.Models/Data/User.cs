@@ -42,30 +42,35 @@ public class User : IdentityUser
     /// <summary>
     /// The relationship between the user and the exercise templates.
     /// </summary>
-    public virtual ICollection<ExerciseTemplate> ExerciseTemplates { get; set; }
+    public virtual ICollection<ExerciseTemplate>? ExerciseTemplates { get; set; }
 
     /// <summary>
     /// The relationship between the user and the exercise.
     /// </summary>
-    public virtual ICollection<Exercise> Exercises { get; set; }
+    public virtual ICollection<Exercise>? Exercises { get; set; }
 
     /// <summary>
     /// The relationship between the user and the macro.
     /// </summary>
-    public virtual ICollection<Macro> Macros { get; set; }
+    public virtual ICollection<Macro>? Macros { get; set; }
 
     /// <summary>
     /// The relationship between the user and the session.
     /// </summary>
-    public virtual ICollection<Session> Sessions { get; set; }
+    public virtual ICollection<Session>? Sessions { get; set; }
 
     /// <summary>
     /// The relationship between the user and the plan.
     /// </summary>
-    public virtual ICollection<Plan> Plans { get; set; }
+    public virtual ICollection<Plan>? Plans { get; set; }
 
     /// <summary>
     /// The relationship between the user and the media.
     /// </summary>
-    public virtual ICollection<Media> Medias { get; set; }
+    public virtual ICollection<Media>? Medias { get; set; }
+
+    /// <summary>
+    /// The relationship between the user and the rating.
+    /// </summary>
+    public virtual ICollection<Rating>? Ratings { get; set; }
 }

@@ -12,6 +12,7 @@ public class DatabaseContext(DbContextOptions options) : IdentityDbContext<User>
     public DbSet<NutritionInfo> NutritionInfos { get; set; }
     public DbSet<Session> Sessions { get; set; }
     public DbSet<Plan> Plans { get; set; }
+    public DbSet<Rating> Ratings { get; set; }
     public DbSet<Exercise> Exercises { get; set; }
     public DbSet<ExerciseRecord> ExerciseRecords { get; set; }
     public DbSet<ExerciseTemplate> ExerciseTemplates { get; set; }
@@ -27,6 +28,7 @@ public class DatabaseContext(DbContextOptions options) : IdentityDbContext<User>
         builder.ApplyConfiguration(new SessionConfiguration());
         builder.ApplyConfiguration(new MacroConfiguration());
         builder.ApplyConfiguration(new PlanConfiguration());
+        builder.ApplyConfiguration(new RatingConfiguration());
         builder.ApplyConfiguration(new RoleConfiguration());
     }
 }

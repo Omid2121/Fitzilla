@@ -8,10 +8,12 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly DatabaseContext _context;
     private ExerciseRepository _exercises;
+    private ExerciseRecordRepository _exerciseRecords;
     private ExerciseTemplateRepository _exerciseTemplate;
     private SessionRepository _sessions;
     private PlanRepository _plans;
     private MacroRepository _macros;
+    private RatingRepository _ratings;
 
     public UnitOfWork(DatabaseContext context)
     {
@@ -20,6 +22,9 @@ public class UnitOfWork : IUnitOfWork
 
     public ExerciseRepository Exercises => 
         _exercises ??= new ExerciseRepository(_context);
+
+    public ExerciseRecordRepository ExerciseRecords =>
+    _exerciseRecords ??= new ExerciseRecordRepository(_context);
 
     public ExerciseTemplateRepository ExerciseTemplates =>
         _exerciseTemplate ??= new ExerciseTemplateRepository(_context);
@@ -32,6 +37,9 @@ public class UnitOfWork : IUnitOfWork
 
     public MacroRepository Macros =>
         _macros ??= new MacroRepository(_context);
+
+    public RatingRepository Ratings =>
+        _ratings ??= new RatingRepository(_context);
 
     public IDbTransaction BeginTransaction()
     {
