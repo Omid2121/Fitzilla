@@ -27,5 +27,5 @@ public enum SortOption
     /// <summary>
     /// Reverse Alphabetical sort option
     /// </summary>
-    [Display(Name = "Reverse Alphabetical")] ReverseAlphabetical,
+    [Display(Name = "Reverse Alphabetical")] ReverseAlphabetical
 }

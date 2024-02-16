@@ -1,11 +1,19 @@
-﻿namespace Fitzilla.BLL.DTOs;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Fitzilla.BLL.DTOs;
 
 public class CreateRatingDTO
 {
+    [Required]
     public int Value { get; set; }
+
+    [Required]
     public string Comment { get; set; }
+
+    [Required]
     public string CreatorId { get; set; }
 
+    [Required]
     public Guid ExerciseTemplateId { get; set; }
 }
 

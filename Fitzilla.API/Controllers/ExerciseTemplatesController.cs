@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Fitzilla.BLL.DTOs;
+using Fitzilla.BLL.Services;
 using Fitzilla.DAL.IRepository;
 using Fitzilla.DAL.Models;
 using Fitzilla.Models.Constants;
@@ -16,10 +17,11 @@ namespace Fitzilla.API.Controllers;
 [ApiController]
 [Authorize(Roles = "Admin, Consumer")]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper, IBlobRepository blobRepository) : ControllerBase
+public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper,ExerciseManager exerciseManager, IBlobRepository blobRepository) : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IMapper _mapper = mapper;
+    private readonly ExerciseManager _exerciseManager = exerciseManager;
     private readonly IBlobRepository _blobRepository = blobRepository;
 
     [HttpGet]
@@ -202,18 +204,10 @@ public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper,
 
     [HttpGet("sort")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> SortExerciseTemplates([FromQuery] SortOption sortRequest, [FromQuery] RequestParams requestParams)
+    public async Task<IActionResult> SortExerciseTemplates([FromQuery] SortOption sortOption, [FromQuery] RequestParams requestParams)
     {
         var exerciseTemplates = await _unitOfWork.ExerciseTemplates.GetPagedList(requestParams,
-            orderBy: et => sortRequest switch
-            {
-                SortOption.Alphabetical => et.OrderBy(exerciseTemplate => exerciseTemplate.Title),
-                SortOption.ReverseAlphabetical => et.OrderByDescending(exerciseTemplate => exerciseTemplate.Title),
-                SortOption.MostPopular => et.OrderByDescending(exerciseTemplate => exerciseTemplate.Ratings!.Count > 0 ? exerciseTemplate.Ratings.Average(rating => rating.Value) : 0),
-                SortOption.MostRecent => et.OrderByDescending(exerciseTemplate => exerciseTemplate.CreatedAt),
-                SortOption.Oldest => et.OrderBy(exerciseTemplate => exerciseTemplate.CreatedAt),
-                _ => et.OrderBy(exerciseTemplate => exerciseTemplate.Title)
-            },
+            orderBy: et => _exerciseManager.SortExerciseTemplatesByOptions(sortOption, et),
             includes: ["Medias"]);
 
         var results = _mapper.Map<IList<ExerciseTemplateDTO>>(exerciseTemplates);
@@ -224,23 +218,13 @@ public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper,
     [HttpGet("filter")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> FilterExerciseTemplates([FromQuery] ExerciseFilterQuery filterRequest, [FromQuery] RequestParams requestParams)
+    public async Task<IActionResult> FilterExerciseTemplates([FromQuery] ExerciseFilterQuery filterQuery, [FromQuery] RequestParams requestParams)
     {
-        if (filterRequest.TargetMuscles.Count == 0 && filterRequest.Equipments.Count == 0) return BadRequest("Submitted data is invalid.");
+        if (filterQuery.TargetMuscles.Count == 0 && filterQuery.Equipments.Count == 0) return BadRequest("Submitted data is invalid.");
 
         var exerciseTemplates = await _unitOfWork.ExerciseTemplates.GetPagedList(requestParams, includes: ["Medias"]);
 
-        if (filterRequest.TargetMuscles.Count > 0)
-        {
-            exerciseTemplates = (IPagedList<ExerciseTemplate>)exerciseTemplates.Where(
-                et => et.TargetMuscles.Any(tm => filterRequest.TargetMuscles.Contains(tm))).ToList();
-        }
-
-        if (filterRequest.Equipments.Count > 0)
-        {
-            exerciseTemplates = (IPagedList<ExerciseTemplate>)exerciseTemplates.Where(
-                et => filterRequest.Equipments.Contains(et.Equipment)).ToList();
-        }
+        exerciseTemplates = _exerciseManager.FilterExerciseTemplatesByQuery(filterQuery, exerciseTemplates);
 
         var results = _mapper.Map<IList<ExerciseTemplateDTO>>(exerciseTemplates);
 

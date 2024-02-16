@@ -114,6 +114,7 @@ public class MacroManager()
     {
         return Math.Abs(nutritionInfo.ProteinPercentage + nutritionInfo.CarbohydratePercentage + nutritionInfo.FatPercentage) == 100;
     }
+    
     public IOrderedQueryable<Macro> SortMacrosByOptions(SortOption sortOption, IQueryable<Macro> macros)
     {
         return sortOption switch
@@ -141,6 +142,5 @@ public class MacroManager()
         }
         return macros;
     }
-
 
 }

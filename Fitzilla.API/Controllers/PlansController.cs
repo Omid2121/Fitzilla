@@ -202,14 +202,14 @@ public class PlansController(IUnitOfWork unitOfWork, IMapper mapper, PlanManager
         if (userRoles.Any(ur => ur.Value == Role.Admin))
         {
             plans = await _unitOfWork.Plans.GetPagedList(requestParams,
-                orderBy: p => _planManager.SortPlansByOptions(sortOption, p));
+                orderBy: queryPlans => _planManager.SortPlansByOptions(sortOption, queryPlans));
         }
         else
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             plans = await _unitOfWork.Plans.GetPagedList(requestParams,
-                p => p.CreatorId == currentUserId,
-                orderBy: p => _planManager.SortPlansByOptions(sortOption, p));
+                plan => plan.CreatorId == currentUserId,
+                orderBy: queryPlans => _planManager.SortPlansByOptions(sortOption, queryPlans));
         }
         var results = _mapper.Map<IList<PlanDTO>>(plans);
 

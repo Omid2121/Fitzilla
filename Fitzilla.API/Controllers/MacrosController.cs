@@ -240,14 +240,12 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
         if (userRoles.Any(ur => ur.Value == Role.Admin))
         {
             macros = await _unitOfWork.Macros.GetPagedList(requestParams);
-
             macros = _macroManager.FilterMacrosByQuery(filterQuery, macros);
         }
         else
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             macros = await _unitOfWork.Macros.GetPagedList(requestParams, m => m.CreatorId == currentUserId);
-
             macros = _macroManager.FilterMacrosByQuery(filterQuery, macros);
         }
         var results = _mapper.Map<IList<MacroDTO>>(macros);
