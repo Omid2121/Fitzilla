@@ -17,7 +17,7 @@ public class User : IdentityUser
     /// <summary>
     /// User's birthdate
     /// </summary>
-    public DateTime DateOfBirth { get; set; }
+    public DateTimeOffset DateOfBirth { get; set; }
 
     /// <summary>
     /// User's gender
@@ -38,6 +38,16 @@ public class User : IdentityUser
     /// Units of measurement(Metric or Imperial)
     /// </summary>
     public Measurement Measurement { get; set; }
+
+    /// <summary>
+    /// User's refresh token
+    /// </summary>
+    public string? RefreshToken { get; set; }
+
+    /// <summary>
+    /// Expiry date of the refresh token
+    /// </summary>
+    public DateTimeOffset RefreshTokenExpiry { get; set; }
 
     /// <summary>
     /// The relationship between the user and the exercise templates.

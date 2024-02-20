@@ -13,6 +13,8 @@ namespace Fitzilla.API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(Roles = "Admin, Consumer")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public class SessionsController(IUnitOfWork unitOfWork, IMapper mapper, IAuthManager authManager) : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;

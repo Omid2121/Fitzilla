@@ -16,6 +16,7 @@ namespace Fitzilla.API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(Roles = "Admin, Consumer")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public class PlansController(IUnitOfWork unitOfWork, IMapper mapper, PlanManager planManager) : ControllerBase
 {
@@ -45,7 +46,7 @@ public class PlansController(IUnitOfWork unitOfWork, IMapper mapper, PlanManager
 
     [HttpGet("paged")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetPagedPlans([FromQuery] RequestParams requestParams)
+    public async Task<IActionResult> GetPlansPaged([FromQuery] RequestParams requestParams)
     {
         IPagedList<Plan> plans;
         var userRoles = User.FindAll(ClaimTypes.Role);

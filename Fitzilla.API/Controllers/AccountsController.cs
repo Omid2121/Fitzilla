@@ -4,7 +4,6 @@ using Fitzilla.BLL.Services;
 using Fitzilla.DAL.Models;
 using Fitzilla.Models.Constants;
 using Fitzilla.Models.Data;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,11 +14,13 @@ namespace Fitzilla.API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-public class AccountsController(IMapper mapper, UserManager<User> userManager, IAuthManager authManager) : ControllerBase
+public class AccountsController(IMapper mapper, UserManager<User> userManager, IAuthManager authManager, IConfiguration configuration) : ControllerBase
 {
     private readonly IMapper _mapper = mapper;
     private readonly UserManager<User> _userManager = userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
     private readonly IAuthManager _authManager = authManager;
+    private readonly IConfiguration _configuration = configuration;
 
     [AllowAnonymous]
     [HttpPost]
@@ -56,15 +57,67 @@ public class AccountsController(IMapper mapper, UserManager<User> userManager, I
 
         if (!await _authManager.ValidateUser(userDTO)) return Unauthorized();
 
+        var accessTokenExpiration = DateTimeOffset.Now.AddHours(Convert.ToDouble(_configuration.GetSection("JwtSettings:JwtLifetime").Value));
+        var refreshTokenExpiration = DateTimeOffset.Now.AddDays(Convert.ToDouble(_configuration.GetSection("JwtSettings:JwtRefreshTokenLifetime").Value));
+
         return Accepted(new AuthResponse
         {
-            Token = await _authManager.CreateToken(),
-            RefreshToken = await _authManager.CreateRefreshToken()
+            AccessToken = await _authManager.CreateAccessToken(),
+            AccessTokenExpiry = accessTokenExpiration,
+            RefreshToken = _authManager.GenerateRefreshToken(),
+            RefreshTokenExpiry = refreshTokenExpiration
         });
     }
 
+    [AllowAnonymous]
+    [HttpPost("refresh-token")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest tokenRequest)
+    {
+        var principal = _authManager.GetPrincipalFromExpiredToken(tokenRequest.AccessToken);
+        if (principal?.Identity?.Name == null) return Unauthorized();
+
+        var user = await _userManager.FindByEmailAsync(principal.Identity.Name);
+        if (user == null || user.RefreshToken != tokenRequest.RefreshToken || user.RefreshTokenExpiry < DateTimeOffset.Now)
+            return Unauthorized();
+
+        var accessTokenExpiration = DateTimeOffset.Now.AddHours(Convert.ToDouble(_configuration.GetSection("JwtSettings:JwtLifetime").Value));
+        var refreshTokenExpiration = DateTimeOffset.Now.AddDays(Convert.ToDouble(_configuration.GetSection("JwtSettings:JwtRefreshTokenLifetime").Value));
+
+        return Accepted(new AuthResponse
+        {
+            AccessToken = await _authManager.CreateAccessToken(),
+            AccessTokenExpiry = accessTokenExpiration,
+            RefreshToken = user.RefreshToken,
+            RefreshTokenExpiry = refreshTokenExpiration
+        });
+    }
+
+    [Authorize(Roles = "Admin, Consumer")]
+    [HttpDelete("revoke-token")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> RevokeRefreshToken()
+    {
+        var email = User.Identity?.Name;
+        if (string.IsNullOrEmpty(email)) return Unauthorized();
+
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user == null) return Unauthorized();
+
+        user.RefreshToken = null;
+
+        await _userManager.UpdateAsync(user);
+
+        return NoContent();
+    }
+
+    [Authorize(Roles = "Admin, Consumer")]
     [HttpGet("account")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetAccount()
     {
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -78,31 +131,10 @@ public class AccountsController(IMapper mapper, UserManager<User> userManager, I
         return Ok(result);
     }
 
-    //TODO: Make sure it works
     [Authorize(Roles = "Admin, Consumer")]
-    [HttpPost("logout")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> Logout()
-    {
-        await HttpContext.SignOutAsync("YourAuthenticationScheme");
-        return Ok();
-    }
-
-
-    [HttpPost]
-    [Route("refresh-token")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> RefreshToken([FromBody] AuthResponse tokenRequest)
-    {
-        var tokenRequestResult = await _authManager.VerifyRefreshToken(tokenRequest);
-
-        if (tokenRequestResult is null) return Unauthorized();
-
-        return Ok(tokenRequestResult);
-    }
-
     [HttpPut("update/{userId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateAccount(string userId, [FromBody] UpdateUserDTO userDTO)
     {
         if (!ModelState.IsValid || string.IsNullOrEmpty(userId)) return BadRequest(ModelState);
@@ -125,8 +157,10 @@ public class AccountsController(IMapper mapper, UserManager<User> userManager, I
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin, Consumer")]
     [HttpDelete("delete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> DeleteAccount([FromBody] DeleteUserDTO userDTO)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
@@ -145,6 +179,78 @@ public class AccountsController(IMapper mapper, UserManager<User> userManager, I
                 ModelState.AddModelError(error.Code, error.Description);
             }
             return BadRequest("Account Delete attempt failed");
+        }
+
+        return NoContent();
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("promote/{userId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> PromoteUser(string userId, [FromBody] List<string> roles)
+    {
+        if (!ModelState.IsValid || string.IsNullOrEmpty(userId)) return BadRequest(ModelState);
+
+        if (roles.Count == 0 || roles == null) return BadRequest("No roles provided");
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null) return NotFound("Account does not exist");
+
+        foreach (var role in roles)
+        {
+            if (!await _roleManager.RoleExistsAsync(role))
+            {
+                ModelState.AddModelError(role, "Role does not exist");
+                return BadRequest(ModelState);
+            }
+        }
+        var result = await _userManager.AddToRolesAsync(user, roles);
+
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(error.Code, error.Description);
+            }
+            return BadRequest("Promotion attempt failed");
+        }
+
+        return NoContent();
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("demote/{userId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DemoteUser(string userId, [FromBody] List<string> roles)
+    {
+        if (!ModelState.IsValid || string.IsNullOrEmpty(userId)) return BadRequest(ModelState);
+
+        if (roles.Count == 0 || roles == null) return BadRequest("No roles provided");
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null) return NotFound("Account does not exist");
+
+        foreach (var role in roles)
+        {
+            if (!await _roleManager.RoleExistsAsync(role))
+            {
+                ModelState.AddModelError(role, "Role does not exist");
+                return BadRequest(ModelState);
+            }
+        }
+        var result = await _userManager.RemoveFromRolesAsync(user, roles);
+
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(error.Code, error.Description);
+            }
+            return BadRequest("Demotion attempt failed");
         }
 
         return NoContent();

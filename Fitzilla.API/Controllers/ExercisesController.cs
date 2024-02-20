@@ -16,6 +16,7 @@ namespace Fitzilla.API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(Roles = "Admin, Consumer")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public class ExercisesController(IUnitOfWork unitOfWork, IMapper mapper, IBlobRepository blobRepository, ExerciseManager exerciseManager) : ControllerBase
 {
@@ -47,7 +48,7 @@ public class ExercisesController(IUnitOfWork unitOfWork, IMapper mapper, IBlobRe
 
     [HttpGet("paged")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetPagedExercises([FromQuery] RequestParams requestParams)
+    public async Task<IActionResult> GetExercisesPaged([FromQuery] RequestParams requestParams)
     {
         IPagedList<Exercise> exercises;
         var userRoles = User.FindAll(ClaimTypes.Role);

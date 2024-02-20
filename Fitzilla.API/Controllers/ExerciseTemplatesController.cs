@@ -16,6 +16,7 @@ namespace Fitzilla.API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(Roles = "Admin, Consumer")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper,ExerciseManager exerciseManager, IBlobRepository blobRepository) : ControllerBase
 {
@@ -36,7 +37,7 @@ public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper,
 
     [HttpGet("paged")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetPagedExerciseTemplates([FromQuery] RequestParams requestParams)
+    public async Task<IActionResult> GetExerciseTemplatesPaged([FromQuery] RequestParams requestParams)
     {
         var exerciseTemplates = await _unitOfWork.ExerciseTemplates.GetPagedList(requestParams, includes: ["Medias"]);
         var results = _mapper.Map<IList<ExerciseTemplateDTO>>(exerciseTemplates);

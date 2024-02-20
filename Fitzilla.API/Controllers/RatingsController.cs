@@ -11,6 +11,7 @@ namespace Fitzilla.API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(Roles = "Admin, Consumer")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public class RatingsController(IUnitOfWork unitOfWork, IMapper mapper) : ControllerBase
 {

@@ -7,9 +7,9 @@ namespace Fitzilla.BLL.Services;
 public interface IAuthManager
 {
     Task<bool> ValidateUser(LoginUserDTO userDTO);
-    Task<string> CreateToken();
-    Task<string> CreateRefreshToken();
-    Task<AuthResponse> VerifyRefreshToken(AuthResponse tokenRequest);
+    Task<string> CreateAccessToken();
+    string GenerateRefreshToken();
+    ClaimsPrincipal? GetPrincipalFromExpiredToken(string? token);
     Task<string> GetUserRoleById(string userId);
     Task<UserDTO> GetCurrentUser(ClaimsPrincipal claimsPrincipal);
 }

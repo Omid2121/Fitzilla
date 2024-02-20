@@ -9,6 +9,8 @@ namespace Fitzilla.API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(Roles = "Admin,Consumer")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
+[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public class MediasController(IUnitOfWork unitOfWork, IBlobRepository blobRepository, IMapper mapper) : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;

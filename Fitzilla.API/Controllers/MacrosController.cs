@@ -17,6 +17,7 @@ namespace Fitzilla.API.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize(Roles = "Admin, Consumer")]
+[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 [ProducesResponseType(StatusCodes.Status500InternalServerError)]
 public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManager macroManager, UserManager<User> userManager) : ControllerBase
 {
@@ -47,7 +48,7 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
 
     [HttpGet("paged")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetPagedMacros([FromQuery] RequestParams requestParams)
+    public async Task<IActionResult> GetMacrosPaged([FromQuery] RequestParams requestParams)
     {
         IPagedList<Macro> macros;
         var userRoles = User.FindAll(ClaimTypes.Role);

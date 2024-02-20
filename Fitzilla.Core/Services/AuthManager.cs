@@ -1,11 +1,11 @@
 ﻿using Fitzilla.BLL.DTOs;
-using Fitzilla.DAL.Models;
 using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Fitzilla.BLL.Services;
@@ -16,7 +16,7 @@ public class AuthManager(UserManager<User> userManager, IConfiguration configura
     private readonly IConfiguration _configuration = configuration;
     private User _user;
 
-    public async Task<string> CreateToken()
+    public async Task<string> CreateAccessToken()
     {
         var signingCredentials = GetSigningCredentials();
         var claims = await GetClaims();
@@ -40,13 +40,13 @@ public class AuthManager(UserManager<User> userManager, IConfiguration configura
     {
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, _user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new Claim(JwtRegisteredClaimNames.Sub, _user.Email),
-            new Claim(ClaimTypes.Name, _user.UserName),
-            new Claim(ClaimTypes.GivenName, _user.FirstName),
-            new Claim(ClaimTypes.Surname, _user.LastName),
-            new Claim(ClaimTypes.Email, _user.Email)
+            new(ClaimTypes.NameIdentifier, _user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(JwtRegisteredClaimNames.Sub, _user.Email),
+            new(ClaimTypes.Name, _user.UserName),
+            new(ClaimTypes.GivenName, _user.FirstName),
+            new(ClaimTypes.Surname, _user.LastName),
+            new(ClaimTypes.Email, _user.Email)
         };
         var roles = await _userManager.GetRolesAsync(_user);
         foreach (var role in roles)
@@ -60,7 +60,7 @@ public class AuthManager(UserManager<User> userManager, IConfiguration configura
     private JwtSecurityToken GenerateTokenOption(SigningCredentials signingCredentials, List<Claim> claims)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
-        var expiration = DateTimeOffset.Now.AddMinutes(
+        var expiration = DateTimeOffset.Now.AddHours(
             Convert.ToDouble(jwtSettings.GetSection("JwtLifetime").Value));
 
         var token = new JwtSecurityToken(
@@ -75,61 +75,49 @@ public class AuthManager(UserManager<User> userManager, IConfiguration configura
 
     public async Task<bool> ValidateUser(LoginUserDTO userDTO)
     {
-        _user = await _userManager.FindByNameAsync(userDTO.Email);
+        _user = await _userManager.FindByNameAsync(userDTO.Email) ?? throw new Exception("User not found");
         return (_user != null && await _userManager.CheckPasswordAsync(_user, userDTO.Password));
     }
 
-    public async Task<string> CreateRefreshToken()
+    public string GenerateRefreshToken()
     {
-        await _userManager.RemoveAuthenticationTokenAsync(_user, "FitzillaApi", "RefreshToken");
-        var newRefreshToken = await _userManager.GenerateUserTokenAsync(_user, "FitzillaApi", "RefreshToken");
-        await _userManager.SetAuthenticationTokenAsync(_user, "FitzillaApi", "RefreshToken", newRefreshToken);
+        var randomNumber = new byte[64];
 
-        return newRefreshToken;
+        using var generator = RandomNumberGenerator.Create();
+        generator.GetBytes(randomNumber);
+
+        return Convert.ToBase64String(randomNumber);
     }
 
-    public async Task<AuthResponse> VerifyRefreshToken(AuthResponse tokenRequest)
+    public ClaimsPrincipal? GetPrincipalFromExpiredToken(string? token)
     {
-        var jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
-        var tokenContent = jwtSecurityTokenHandler.ReadJwtToken(tokenRequest.Token);
-        var userName = tokenContent.Claims.FirstOrDefault(q => q.Type == ClaimTypes.Name)?.Value;
-        _user = await _userManager.FindByNameAsync(userName);
+        var jwtSettings = configuration.GetSection("JwtSettings");
+        //var key = Environment.GetEnvironmentVariable("JwtSecretKey") ?? throw new Exception("Secret key was not configured.");
+        var key = jwtSettings.GetSection("JwtSecretKey").Value ?? throw new Exception("Secret key was not configured.");
 
-        try
+        var validation = new TokenValidationParameters
         {
-            var isValid = await _userManager.VerifyUserTokenAsync(_user, "FitzillaApi", "RefreshToken", tokenRequest.RefreshToken);
-            if (isValid)
-            {
-                return new AuthResponse
-                {
-                    Token = await CreateToken(),
-                    RefreshToken = await CreateRefreshToken()
-                };
-            }
-            await _userManager.UpdateSecurityStampAsync(_user);
-        }
-        catch (Exception ex)
-        {
-            throw ex;
-        }
+            ValidateIssuer = true,              
+            ValidateLifetime = false,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidAudience = jwtSettings.GetSection("JwtValidAudience").Value,
+            ValidIssuer = jwtSettings.GetSection("JwtValidIssuer").Value,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+        };
 
-        return null;
-    }
-
-    public void RevokeRefreshToken(string refreshToken, string email)
-    {
-
+        return new JwtSecurityTokenHandler().ValidateToken(token, validation, out _);
     }
 
     public async Task<string> GetUserRoleById(string userId)
     {
-        _user = await _userManager.FindByIdAsync(userId);
-        return _userManager.GetRolesAsync(_user).Result.FirstOrDefault();
+        _user = await _userManager.FindByIdAsync(userId) ?? throw new Exception("User not found");
+        return _userManager.GetRolesAsync(_user).Result.FirstOrDefault() ?? throw new Exception("Role not found");
     }
 
     public async Task<UserDTO> GetCurrentUser(ClaimsPrincipal claimsPrincipal)
     {
-        _user = await _userManager.GetUserAsync(claimsPrincipal);
+        _user = await _userManager.GetUserAsync(claimsPrincipal) ?? throw new Exception("User not found");
 
         return new UserDTO
         {

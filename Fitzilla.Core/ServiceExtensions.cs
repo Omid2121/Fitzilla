@@ -61,7 +61,7 @@ public static class ServiceExtensions
                 ValidAudience = jwtSettings.GetSection("JwtValidAudience").Value,
                 ValidIssuer = jwtSettings.GetSection("JwtValidIssuer").Value,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
-                ClockSkew = TimeSpan.Zero           // There is no time difference between the server and the client
+                ClockSkew = TimeSpan.FromSeconds(60) // 1 minute tolerance for the expiration date
             };
         });
     }

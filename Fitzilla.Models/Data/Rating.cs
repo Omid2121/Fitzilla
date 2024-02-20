@@ -1,6 +1,4 @@
-﻿using Fitzilla.Models.Enums;
-
-namespace Fitzilla.Models.Data;
+﻿namespace Fitzilla.Models.Data;
 
 public class Rating : RecordLog
 {
@@ -23,6 +21,6 @@ public class Rating : RecordLog
     /// <summary>
     /// The relationship between the rating and the exercise template.
     /// </summary>
-    public Guid ExerciseTemplateId { get; set; }
-    public virtual ExerciseTemplate ExerciseTemplate { get; set; }
+    public Guid? ExerciseTemplateId { get; set; }
+    public virtual ExerciseTemplate? ExerciseTemplate { get; set; }
 }
