@@ -77,12 +77,12 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
         var userRoles = User.FindAll(ClaimTypes.Role);
         if (userRoles.Any(ur => ur.Value == Role.Admin))
         {
-            macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(macroId), includes: ["NutritionInfo"]);
+            macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(macroId));
         }
         else
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(macroId), includes: ["NutritionInfo"]);
+            macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(macroId));
         }
         var result = _mapper.Map<MacroDTO>(macro);
 
@@ -122,34 +122,23 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
     {
         if (!ModelState.IsValid || macroId == Guid.Empty) return BadRequest($"Invalid payload: {ModelState}");
 
-        var macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(macroId));
-        if (macro is null) return NotFound($"Exercise with id {macroId} not found.");
-
-        _mapper.Map(macroDTO, macro);
         var currentUser = await _userManager.GetUserAsync(User);
         if (currentUser == null) return BadRequest("User not found.");
         
         var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(ur => ur.Value == Role.Admin))
-        {   
-            macro = _macroManager.CalculateMacro(macro, currentUser);
-            if (macro is null) return BadRequest("Invalid payload.");
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        if (!isAdmin && macroDTO.CreatorId != currentUser.Id) return Forbid("You are not authorized to update this macro.");
 
-            macro = _macroManager.CalculateMacroCycleLength(macro, currentUser.Weight);
-            macro.ModifiedAt = DateTimeOffset.Now;
-            _unitOfWork.Macros.Update(macro);
-        }
-        else
-        {
-            //var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (macro.CreatorId != currentUser.Id) return Forbid("You are not authorized to update this macro.");
-            macro = _macroManager.CalculateMacro(macro, currentUser);
-            if (macro is null) return BadRequest("Invalid payload.");
+        var macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(macroId));
+        if (macro is null) return NotFound($"Exercise with id {macroId} not found.");
 
-            macro = _macroManager.CalculateMacroCycleLength(macro, currentUser.Weight);
-            macro.ModifiedAt = DateTimeOffset.Now;
-            _unitOfWork.Macros.Update(macro);
-        }
+        _mapper.Map(macroDTO, macro);
+        macro = _macroManager.CalculateMacro(macro, currentUser);
+        if (macro is null) return BadRequest("Invalid payload.");
+
+        macro = _macroManager.CalculateMacroCycleLength(macro, currentUser.Weight);
+        macro.ModifiedAt = DateTimeOffset.Now;
+        _unitOfWork.Macros.Update(macro);
         await _unitOfWork.Save();
         
         return NoContent();
@@ -165,16 +154,11 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
         if (macro == null) return NotFound($"Exercise with id {macroId} not found.");
 
         var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(ur => ur.Value == Role.Admin))
-        {
-            await _unitOfWork.Macros.Delete(macroId);
-        }
-        else
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (macro.CreatorId != currentUserId) return Forbid("You are not authorized to delete this macro.");
-            await _unitOfWork.Macros.Delete(macroId);
-        }
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && macro.CreatorId != currentUserId) return Forbid("You are not authorized to delete this macro.");
+
+        await _unitOfWork.Macros.Delete(macroId);
         await _unitOfWork.Save();
 
         return NoContent();

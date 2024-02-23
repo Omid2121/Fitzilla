@@ -9,7 +9,6 @@ public class DatabaseContext(DbContextOptions options) : IdentityDbContext<User>
 {
     public DbSet<Media> Medias { get; set; }
     public DbSet<Macro> Macros { get; set; }
-    public DbSet<NutritionInfo> NutritionInfos { get; set; }
     public DbSet<Session> Sessions { get; set; }
     public DbSet<Plan> Plans { get; set; }
     public DbSet<Rating> Ratings { get; set; }

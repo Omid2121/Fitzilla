@@ -129,30 +129,24 @@ public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper,
     {
         if (!ModelState.IsValid || exerciseTemplateId == Guid.Empty) return BadRequest($"Invalid payload: {ModelState}");
 
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && exerciseTemplateDTO.CreatorId != currentUserId) return Forbid("You are not authorized to delete this exercise template.");
+
         var exerciseTemplate = await _unitOfWork.ExerciseTemplates.Get(e => e.Id.Equals(exerciseTemplateId));
         if (exerciseTemplate == null) return NotFound($"Exercise with id {exerciseTemplateId} not found.");
 
         _mapper.Map(exerciseTemplateDTO, exerciseTemplate);
         exerciseTemplate.ModifiedAt = DateTimeOffset.Now;
 
-        var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(ur => ur.Value == Role.Admin))
-        {
-            _unitOfWork.ExerciseTemplates.Update(exerciseTemplate);
-        }
-        else
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (exerciseTemplate.CreatorId != currentUserId) return Forbid("You are not authorized to update this exercise template.");
-            _unitOfWork.ExerciseTemplates.Update(exerciseTemplate);
-        }
+        _unitOfWork.ExerciseTemplates.Update(exerciseTemplate);
         //TODO: make sure it works.
         var filePathes = await _blobRepository.UploadBlobFiles(files);
         for (int i = 0; i < filePathes.Count; i++)
         {
             exerciseTemplate.Medias.Add(new Media { FilePath = filePathes[i], Title = files[i].FileName });
         }
-
         await _unitOfWork.Save();
 
         return NoContent();
@@ -169,16 +163,12 @@ public class ExerciseTemplatesController(IUnitOfWork unitOfWork, IMapper mapper,
         if (exerciseTemplate == null) return NotFound($"Exercise with id {exerciseTemplateId} not found.");
 
         var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(ur => ur.Value == Role.Admin))
-        {
-            await _unitOfWork.ExerciseTemplates.Delete(exerciseTemplateId);
-        }
-        else
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (exerciseTemplate.CreatorId != currentUserId) return Forbid("You are not authorized to delete this exercise template.");
-            await _unitOfWork.ExerciseTemplates.Delete(exerciseTemplateId);
-        }
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && exerciseTemplate.CreatorId != currentUserId) return Forbid("You are not authorized to delete this exercise template.");
+        
+        await _unitOfWork.ExerciseTemplates.Delete(exerciseTemplateId);
+
         //TODO: make sure it works.
         var result = _blobRepository.DeleteBlobFiles(exerciseTemplate.Medias.Select(m => m.FilePath).ToList());
         if (result.IsFaulted) return BadRequest(result.Exception.Message);

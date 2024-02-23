@@ -1,12 +1,5 @@
-﻿using Fitzilla.Models.Data;
-using Fitzilla.Models.Enums;
-using System;
-using System.Collections.Generic;
+﻿using Fitzilla.Models.Enums;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Fitzilla.BLL.DTOs;
 
@@ -59,4 +52,8 @@ public class UpdateSessionDTO
 
     [Required]
     public ICollection<ActivityType> ActivityTypes { get; set; }
+
+    public Guid PlanId { get; set; }
+
+    public string CreatorId { get; set; }
 }

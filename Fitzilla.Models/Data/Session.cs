@@ -34,7 +34,7 @@ public class Session : EntityDetail
     /// <summary>
     /// List of activity types for the session.
     /// </summary>
-    public virtual ICollection<ActivityType> ActivityTypes  { get; set; }
+    public virtual IList<ActivityType> ActivityTypes  { get; set; }
 
     /// <summary>
     /// The relationship between the session and the exercise.

@@ -26,7 +26,7 @@ public class CreateExerciseDTO
     [Required]
     public virtual ICollection<CreateExerciseRecordDTO> ExerciseRecords { get; set; }
 
-    public virtual ICollection<MediaDTO>? Medias { get; set; }
+    public virtual ICollection<CreateMediaDTO>? Medias { get; set; }
 }
 
 public class ExerciseDTO : CreateExerciseDTO

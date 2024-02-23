@@ -1,5 +1,5 @@
 ﻿using Fitzilla.BLL.DTOs;
-using Fitzilla.DAL.Models;
+using Fitzilla.Models.Data;
 using System.Security.Claims;
 
 namespace Fitzilla.BLL.Services;
@@ -7,9 +7,10 @@ namespace Fitzilla.BLL.Services;
 public interface IAuthManager
 {
     Task<bool> ValidateUser(LoginUserDTO userDTO);
-    Task<string> CreateAccessToken();
+    Task<string> CreateAccessToken(User user);
     string GenerateRefreshToken();
     ClaimsPrincipal? GetPrincipalFromExpiredToken(string? token);
     Task<string> GetUserRoleById(string userId);
-    Task<UserDTO> GetCurrentUser(ClaimsPrincipal claimsPrincipal);
+    DateTimeOffset AccessTokenExpiration();
+    DateTimeOffset RefreshTokenExpiration();
 }

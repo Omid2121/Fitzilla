@@ -1,8 +1,6 @@
-﻿using Fitzilla.DAL.IRepository;
-using Fitzilla.DAL.Models;
+﻿using Fitzilla.DAL.Models;
 using Fitzilla.Models.Data;
 using Fitzilla.Models.Enums;
-using Microsoft.AspNetCore.Identity;
 using X.PagedList;
 
 namespace Fitzilla.BLL.Services;
@@ -50,20 +48,20 @@ public class MacroManager()
 
     public Macro? CalculateMacro(Macro macro, User user)
     {
-        macro.NutritionInfo.Calorie = CalculateBMR(user);
-        macro.NutritionInfo.Calorie = CalculateActivityLevel(macro);
-        macro.NutritionInfo.Calorie = CalculateGoalType(macro);
+        macro.Calorie = CalculateBMR(user);
+        macro.Calorie = CalculateActivityLevel(macro);
+        macro.Calorie = CalculateGoalType(macro);
 
         // User's macros (Protein, Carbs, Fat)
-        if (!IsValidMacroPercentage(macro.NutritionInfo))
+        if (!IsValidMacroPercentage(macro))
             throw new Exception("Macro percentages should add up to 100%");
 
         // 1 gram of protein = 4 calories
-        macro.NutritionInfo.ProteinAmount = macro.NutritionInfo.Calorie * (macro.NutritionInfo.ProteinPercentage / 100) / 4;
+        macro.ProteinAmount = macro.Calorie * (macro.ProteinPercentage / 100) / 4;
         // 1 gram of carbs = 4 calories
-        macro.NutritionInfo.CarbohydrateAmount = macro.NutritionInfo.Calorie * (macro.NutritionInfo.CarbohydratePercentage / 100) / 4;
+        macro.CarbohydrateAmount = macro.Calorie * (macro.CarbohydratePercentage / 100) / 4;
         // 1 gram of fat = 9 calories
-        macro.NutritionInfo.FatAmount = macro.NutritionInfo.Calorie * (macro.NutritionInfo.FatPercentage / 100) / 9;
+        macro.FatAmount = macro.Calorie * (macro.FatPercentage / 100) / 9;
 
         return macro;
     }
@@ -86,11 +84,11 @@ public class MacroManager()
     {
         return macro.ActivityLevel switch
         {
-            ActivityLevel.Sedentary => macro.NutritionInfo.Calorie *= 1.2,
-            ActivityLevel.LightlyActive => macro.NutritionInfo.Calorie *= 1.375,
-            ActivityLevel.ModeratelyActive => macro.NutritionInfo.Calorie *= 1.55,
-            ActivityLevel.VigorouslyActive => macro.NutritionInfo.Calorie *= 1.725,
-            ActivityLevel.VeryActive => macro.NutritionInfo.Calorie *= 1.9,
+            ActivityLevel.Sedentary => macro.Calorie *= 1.2,
+            ActivityLevel.LightlyActive => macro.Calorie *= 1.375,
+            ActivityLevel.ModeratelyActive => macro.Calorie *= 1.55,
+            ActivityLevel.VigorouslyActive => macro.Calorie *= 1.725,
+            ActivityLevel.VeryActive => macro.Calorie *= 1.9,
             _ => throw new Exception("Invalid activity level."),
         };
     }
@@ -99,20 +97,20 @@ public class MacroManager()
     {
         return macro.GoalType switch
         {
-            GoalType.MildWeightLoss => macro.NutritionInfo.Calorie -= 250,
-            GoalType.WeightLoss => macro.NutritionInfo.Calorie -= 500,
-            GoalType.ExtremeWeightLoss => macro.NutritionInfo.Calorie -= 1000,
-            GoalType.Maintenance => macro.NutritionInfo.Calorie,
-            GoalType.MildWeightGain => macro.NutritionInfo.Calorie += 250,
-            GoalType.WeightGain => macro.NutritionInfo.Calorie += 500,
-            GoalType.ExtremeWeightGain => macro.NutritionInfo.Calorie += 1000,
+            GoalType.MildWeightLoss => macro.Calorie -= 250,
+            GoalType.WeightLoss => macro.Calorie -= 500,
+            GoalType.ExtremeWeightLoss => macro.Calorie -= 1000,
+            GoalType.Maintenance => macro.Calorie,
+            GoalType.MildWeightGain => macro.Calorie += 250,
+            GoalType.WeightGain => macro.Calorie += 500,
+            GoalType.ExtremeWeightGain => macro.Calorie += 1000,
             _ => throw new Exception("Invalid goal type."),
         };
     }
 
-    private static bool IsValidMacroPercentage(NutritionInfo nutritionInfo)
+    private static bool IsValidMacroPercentage(Macro macro)
     {
-        return Math.Abs(nutritionInfo.ProteinPercentage + nutritionInfo.CarbohydratePercentage + nutritionInfo.FatPercentage) == 100;
+        return Math.Abs(macro.ProteinPercentage + macro.CarbohydratePercentage + macro.FatPercentage) == 100;
     }
     
     public IOrderedQueryable<Macro> SortMacrosByOptions(SortOption sortOption, IQueryable<Macro> macros)

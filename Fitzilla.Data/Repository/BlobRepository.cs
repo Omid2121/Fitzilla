@@ -26,7 +26,7 @@ namespace Fitzilla.DAL.Repository
         }
         public async Task<BlobObject> GetBlobFile(string path)
         {
-            var fileName = new Uri(path).Segments.LastOrDefault();
+            var fileName = new Uri(path).Segments.LastOrDefault() ?? string.Empty;
 
             try
             {
@@ -70,7 +70,7 @@ namespace Fitzilla.DAL.Repository
 
             foreach (var path in paths)
             {
-                var fileName = new Uri(path).Segments.LastOrDefault();
+                var fileName = new Uri(path).Segments.LastOrDefault() ?? string.Empty;
 
                 try
                 {

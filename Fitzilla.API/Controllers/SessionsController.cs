@@ -73,7 +73,6 @@ public class SessionsController(IUnitOfWork unitOfWork, IMapper mapper, IAuthMan
         if (!ModelState.IsValid) return BadRequest($"Invalid payload. {ModelState}");
 
         var session = _mapper.Map<Session>(sessionDTO);
-        //session.CreatorId = currentUserId;
         session.CreatedAt = DateTimeOffset.Now;
         var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (session.CreatorId != currentUserId) return Forbid("You are not authorized to create this session.");
@@ -98,22 +97,17 @@ public class SessionsController(IUnitOfWork unitOfWork, IMapper mapper, IAuthMan
     {
         if (sessionId == Guid.Empty || !ModelState.IsValid) return BadRequest($"Invalid payload. {ModelState}");
 
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && sessionDTO.CreatorId != currentUserId) return Forbid("You are not authorized to update this session.");
+
         var session = await _unitOfWork.Sessions.Get(s => s.Id.Equals(sessionId));
         if (session == null) return NotFound($"Exercise with id {sessionId} not found.");
 
         _mapper.Map(sessionDTO, session);
         session.ModifiedAt = DateTimeOffset.Now;
-        var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(ur => ur.Value == Role.Admin))
-        {
-            _unitOfWork.Sessions.Update(session);
-        }
-        else
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (session.CreatorId != currentUserId) return Forbid("You are not authorized to update this session.");
-            _unitOfWork.Sessions.Update(session);
-        }
+        _unitOfWork.Sessions.Update(session);
         await _unitOfWork.Save();
 
         return NoContent();
@@ -131,16 +125,11 @@ public class SessionsController(IUnitOfWork unitOfWork, IMapper mapper, IAuthMan
         if (session == null) return NotFound($"Exercise with id {sessionId} not found.");
 
         var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(ur => ur.Value == Role.Admin))
-        {
-            await _unitOfWork.Sessions.Delete(sessionId);
-        }
-        else
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (session.CreatorId != currentUserId) return Forbid("You are not authorized to delete this session.");
-            await _unitOfWork.Sessions.Delete(sessionId);
-        }
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && session.CreatorId != currentUserId) return Forbid("You are not authorized to delete this session.");
+        
+        await _unitOfWork.Sessions.Delete(sessionId);
         await _unitOfWork.Save();
 
         return NoContent();
@@ -160,20 +149,13 @@ public class SessionsController(IUnitOfWork unitOfWork, IMapper mapper, IAuthMan
         if (session.IsActive) return BadRequest("Session is already active.");
 
         var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(ur => ur.Value == Role.Admin))
-        {
-            session.IsActive = true;
-            session.ActivatedAt = DateTimeOffset.Now;
-            _unitOfWork.Sessions.Update(session);
-        }
-        else
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (session.CreatorId != currentUserId) return Forbid("You are not authorized to activate this session.");
-            session.IsActive = true;
-            session.ActivatedAt = DateTimeOffset.Now;
-            _unitOfWork.Sessions.Update(session);
-        }
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && session.CreatorId != currentUserId) return Forbid("You are not authorized to activate this session.");
+        
+        session.IsActive = true;
+        session.ActivatedAt = DateTimeOffset.Now;
+        _unitOfWork.Sessions.Update(session);
         await _unitOfWork.Save();
 
         return NoContent();
@@ -190,23 +172,16 @@ public class SessionsController(IUnitOfWork unitOfWork, IMapper mapper, IAuthMan
         var session = await _unitOfWork.Sessions.Get(s => s.Id.Equals(sessionId));
         if (session == null) return NotFound($"Session with id {sessionId} not found.");
 
-        if (!session.IsActive) return BadRequest("Session is already inactive.");
+        if (!session.IsActive) return BadRequest("Session is already finished.");
 
         var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(ur => ur.Value == Role.Admin))
-        {
-            session.IsActive = false;
-            session.FinishedAt = DateTimeOffset.Now;
-            _unitOfWork.Sessions.Update(session);
-        }
-        else
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (session.CreatorId != currentUserId) return Forbid("You are not authorized to finish this session.");
-            session.IsActive = false;
-            session.FinishedAt = DateTimeOffset.Now;
-            _unitOfWork.Sessions.Update(session);
-        }
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && session.CreatorId != currentUserId) return Forbid("You are not authorized to finish this session.");
+
+        session.IsActive = false;
+        session.FinishedAt = DateTimeOffset.Now;
+        _unitOfWork.Sessions.Update(session);
         await _unitOfWork.Save();
 
         return NoContent();
@@ -223,23 +198,16 @@ public class SessionsController(IUnitOfWork unitOfWork, IMapper mapper, IAuthMan
         var session = await _unitOfWork.Sessions.Get(s => s.Id.Equals(sessionId));
         if (session == null) return NotFound($"Session with id {sessionId} not found.");
 
-        if (!session.IsActive) return BadRequest("Session is already inactive.");
+        if (!session.IsActive) return BadRequest("Session is already either finished or cancelled.");
 
         var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(ur => ur.Value == Role.Admin))
-        {
-            session.IsActive = false;
-            session.ActivatedAt = null;
-            _unitOfWork.Sessions.Update(session);
-        }
-        else
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (session.CreatorId != currentUserId) return Forbid("You are not authorized to cancel this session.");
-            session.IsActive = false;
-            session.ActivatedAt = null;
-            _unitOfWork.Sessions.Update(session);
-        }
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && session.CreatorId != currentUserId) return Forbid("You are not authorized to cancel this session.");
+
+        session.IsActive = false;
+        session.ActivatedAt = null;
+        _unitOfWork.Sessions.Update(session);
         await _unitOfWork.Save();
 
         return NoContent();

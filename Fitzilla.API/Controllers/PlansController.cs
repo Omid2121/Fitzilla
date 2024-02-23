@@ -95,8 +95,8 @@ public class PlansController(IUnitOfWork unitOfWork, IMapper mapper, PlanManager
     {
         if (!ModelState.IsValid) return BadRequest($"Invalid payload. {ModelState}");
 
-        if (planDTO.SessionsPerWeek < 1 || planDTO.SessionsPerWeek > 7) return BadRequest("SessionsPerWeek must be between 1 and 7.");
-        if (planDTO.DurationInWeeks < 1 || planDTO.DurationInWeeks > 52) return BadRequest("DurationInWeeks must be between 1 and 52.");
+        if (planDTO.SessionsPerWeek < 1 || planDTO.SessionsPerWeek > 7) return BadRequest("Plan can only have between 1 and 7 sessions per week.");
+        if (planDTO.DurationInWeeks < 1 || planDTO.DurationInWeeks > 52) return BadRequest("Plan can only have a duration between 1 and 52 weeks.");
 
         var plan = _mapper.Map<Plan>(planDTO);
         plan.CreatedAt = DateTimeOffset.Now;
@@ -117,27 +117,20 @@ public class PlansController(IUnitOfWork unitOfWork, IMapper mapper, PlanManager
     {
         if (!ModelState.IsValid || planId == Guid.Empty) return BadRequest($"Invalid payload. {ModelState}");
 
-        if (planDTO.SessionsPerWeek < 1 || planDTO.SessionsPerWeek > 7) return BadRequest("SessionsPerWeek must be between 1 and 7.");
-        if (planDTO.DurationInWeeks < 1 || planDTO.DurationInWeeks > 52) return BadRequest("DurationInWeeks must be between 1 and 52.");
-        
+        if (planDTO.SessionsPerWeek < 1 || planDTO.SessionsPerWeek > 7) return BadRequest("Plan can only have between 1 and 7 sessions per week.");
+        if (planDTO.DurationInWeeks < 1 || planDTO.DurationInWeeks > 52) return BadRequest("Plan can only have a duration between 1 and 52 weeks.");
+
         var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(c => c.Value == Role.Admin))
-        {
-            var plan = await _unitOfWork.Plans.Get(w => w.Id.Equals(planId));
-            if (plan == null) return NotFound($"Plan with id {planId} not found.");
-            _mapper.Map(planDTO, plan);
-            plan.ModifiedAt = DateTimeOffset.Now;
-            _unitOfWork.Plans.Update(plan);
-        }
-        else
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var plan = await _unitOfWork.Plans.Get(w => w.Id.Equals(planId) && w.CreatorId == currentUserId);
-            if (plan == null) return NotFound($"Plan with id {planId} not found.");
-            _mapper.Map(planDTO, plan);
-            plan.ModifiedAt = DateTimeOffset.Now;
-            _unitOfWork.Plans.Update(plan);
-        }
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && planDTO.CreatorId != currentUserId) return Forbid("You are not authorized to update this plan.");
+
+        var plan = await _unitOfWork.Plans.Get(w => w.Id.Equals(planId) && w.CreatorId == currentUserId);
+        if (plan == null) return NotFound($"Plan with id {planId} not found.");
+
+        _mapper.Map(planDTO, plan);
+        plan.ModifiedAt = DateTimeOffset.Now;
+        _unitOfWork.Plans.Update(plan);
         await _unitOfWork.Save();
 
         return NoContent();
@@ -153,16 +146,11 @@ public class PlansController(IUnitOfWork unitOfWork, IMapper mapper, PlanManager
         if (plan == null) return NotFound($"Exercise with id {planId} not found.");
 
         var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(ur => ur.Value == Role.Admin))
-        {
-            await _unitOfWork.Plans.Delete(planId);
-        }
-        else
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (plan.CreatorId != currentUserId) return Forbid("You are not authorized to delete this plan.");
-            await _unitOfWork.Plans.Delete(planId);
-        }
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && plan.CreatorId != currentUserId) return Forbid("You are not authorized to delete this plan.");
+
+        await _unitOfWork.Plans.Delete(planId);
         await _unitOfWork.Save();
 
         return NoContent();

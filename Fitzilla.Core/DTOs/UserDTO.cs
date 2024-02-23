@@ -25,7 +25,7 @@ public class CreateUserDTO : LoginUserDTO
     public string LastName { get; set; }
 
     [Required]
-    public DateTime DateOfBirth { get; set; }
+    public DateTimeOffset DateOfBirth { get; set; }
 
     [DataType(DataType.PhoneNumber)]
     public string PhoneNumber { get; set; }
@@ -45,13 +45,16 @@ public class CreateUserDTO : LoginUserDTO
 public class UserDTO : CreateUserDTO
 {
     public string Id { get; set; }
+    public string? RefreshToken { get; set; }
+    public DateTimeOffset RefreshTokenExpiry { get; set; }
 
     public virtual ICollection<ExerciseTemplateDTO>? ExerciseTemplates { get; set; }
     public virtual ICollection<ExerciseDTO>? Exercises { get; set; }
     public virtual ICollection<MacroDTO>? Macros { get; set; }
     public virtual ICollection<SessionDTO>? Sessions { get; set; }
     public virtual ICollection<PlanDTO>? Plans { get; set; }
-    public virtual ICollection<MediaDTO>? Images { get; set; }
+    public virtual ICollection<MediaDTO>? Medias { get; set; }
+    public virtual ICollection<RatingDTO>? Ratings { get; set; }
 }
 
 public class LoginResponseDTO

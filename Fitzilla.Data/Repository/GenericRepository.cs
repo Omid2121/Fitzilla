@@ -30,7 +30,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class, IEnti
         _dbSet.RemoveRange(entities);
     }
 
-    public async Task<T> Get(Expression<Func<T, bool>> expression, List<string> includes = null)
+    public async Task<T> Get(Expression<Func<T, bool>>? expression, List<string>? includes = null)
     {
         IQueryable<T> query = _dbSet;
         if (includes != null)
@@ -43,8 +43,8 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class, IEnti
         return await query.AsNoTracking().FirstOrDefaultAsync(expression);
     }
 
-    public async Task<IList<T>> GetAll(Expression<Func<T, bool>> expression = null,
-        Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, List<string> includes = null)
+    public async Task<IList<T>> GetAll(Expression<Func<T, bool>>? expression = null,
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null, List<string>? includes = null)
     {
         IQueryable<T> query = _dbSet;
 
@@ -64,13 +64,13 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class, IEnti
         {
             query = orderBy(query);
         }
-
+        
         return await query.AsNoTracking().ToListAsync();
     }
 
     public async Task<IPagedList<T>> GetPagedList(RequestParams requestParams,
-        Expression<Func<T, bool>> expression = null, 
-        Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, List<string> includes = null)
+        Expression<Func<T, bool>>? expression = null, 
+        Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null, List<string>? includes = null)
     {
         IQueryable<T> query = _dbSet;
 
@@ -101,7 +101,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class, IEnti
         await _dbSet.AddAsync(entity);
     }
 
-    public async Task InsertRange(IEnumerable<T> entities)
+    public async Task InsertRange(IEnumerable<T>? entities)
     {
         entities.Select(entity => entity.Id = Guid.NewGuid());
         await _dbSet.AddRangeAsync(entities);

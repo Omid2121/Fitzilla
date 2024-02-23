@@ -2,9 +2,11 @@
 using Fitzilla.BLL.DTOs;
 using Fitzilla.DAL.IRepository;
 using Fitzilla.DAL.Models;
+using Fitzilla.Models.Constants;
 using Fitzilla.Models.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Fitzilla.API.Controllers;
 
@@ -44,15 +46,14 @@ public class RatingsController(IUnitOfWork unitOfWork, IMapper mapper) : Control
         return Ok(results);
     }
 
-    //TODO: Check by ratingId or by exerciseTemplateId or both
     [HttpGet("{ratingId}", Name = "GetRatingById")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetRatingById(Guid ratingId)
     {
         if (ratingId == Guid.Empty) return BadRequest("Submitted data is invalid.");
 
-        var rating = await _unitOfWork.Ratings.Get(
-            r => r.Id.Equals(ratingId), ["Medias"]);
+        var rating = await _unitOfWork.Ratings.Get(r => r.Id.Equals(ratingId), ["Creator", "ExerciseTemplate"]);
+        if (rating == null) return NotFound("No rating found for the specified id.");
 
         var result = _mapper.Map<RatingDTO>(rating);
 
@@ -66,10 +67,13 @@ public class RatingsController(IUnitOfWork unitOfWork, IMapper mapper) : Control
     {
         if (createRatingDTO == null) return BadRequest("Submitted data is invalid.");
 
+        var rating = _mapper.Map<Rating>(createRatingDTO);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (rating.CreatorId != currentUserId) return Forbid("You are not authorized to create this rating.");
+
         var exerciseTemplate = await _unitOfWork.ExerciseTemplates.Get(e => e.Id.Equals(createRatingDTO.ExerciseTemplateId));
         if (exerciseTemplate == null) return NotFound("No exercise template found for the specified rating.");
 
-        var rating = _mapper.Map<Rating>(createRatingDTO);
         rating.CreatedAt = DateTimeOffset.Now;
         await _unitOfWork.Ratings.Insert(rating);
         await _unitOfWork.Save();
@@ -83,6 +87,11 @@ public class RatingsController(IUnitOfWork unitOfWork, IMapper mapper) : Control
     public async Task<IActionResult> UpdateRating(Guid ratingId, [FromBody] UpdateRatingDTO updateRatingDTO)
     {
         if (updateRatingDTO == null) return BadRequest("Submitted data is invalid.");
+
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && updateRatingDTO.CreatorId != currentUserId) return Forbid("You are not authorized to update this rating.");
 
         var rating = await _unitOfWork.Ratings.Get(r => r.Id.Equals(ratingId));
         if (rating == null) return BadRequest("Submitted data is invalid.");
@@ -102,6 +111,11 @@ public class RatingsController(IUnitOfWork unitOfWork, IMapper mapper) : Control
     {
         var rating = await _unitOfWork.Ratings.Get(r => r.Id.Equals(ratingId));
         if (rating == null) return BadRequest("Submitted data is invalid.");
+
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && rating.CreatorId != currentUserId) return Forbid("You are not authorized to delete this rating.");
 
         await _unitOfWork.Ratings.Delete(ratingId);
         await _unitOfWork.Save();

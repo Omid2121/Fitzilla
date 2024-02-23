@@ -1,6 +1,9 @@
 ﻿using AspNetCoreRateLimit;
+using Fitzilla.BLL.Services;
 using Fitzilla.DAL;
+using Fitzilla.DAL.IRepository;
 using Fitzilla.DAL.Models;
+using Fitzilla.DAL.Repository;
 using Fitzilla.Models.Data;
 using Marvin.Cache.Headers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -85,6 +88,30 @@ public static class ServiceExtensions
                 }
             });
         });
+    }    
+
+    public static void ConfigureCors(this IServiceCollection services)
+    {
+        services.AddCors(options =>
+        {
+            options.AddPolicy("CorsPolicy", builder =>
+            {
+                builder.AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+            });
+        });
+    }
+
+    public static void ConfigureDependencies(this IServiceCollection services)
+    {
+        services.AddTransient<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IAuthManager, AuthManager>();
+        services.AddScoped<IBlobRepository, BlobRepository>();
+        services.AddScoped<ExerciseManager>();
+        services.AddScoped<MacroManager>();
+        services.AddScoped<PlanManager>();
+        services.AddScoped<SessionManager>();
     }
 
     public static void ConfigureHttpCacheHeaders(this IServiceCollection services)

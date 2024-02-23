@@ -14,12 +14,11 @@ public class AuthManager(UserManager<User> userManager, IConfiguration configura
 {
     private readonly UserManager<User> _userManager = userManager;
     private readonly IConfiguration _configuration = configuration;
-    private User _user;
-
-    public async Task<string> CreateAccessToken()
+    
+    public async Task<string> CreateAccessToken(User user)
     {
         var signingCredentials = GetSigningCredentials();
-        var claims = await GetClaims();
+        var claims = await GetClaims(user);
         var tokenOptions = GenerateTokenOption(signingCredentials, claims);
 
         return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
@@ -36,19 +35,19 @@ public class AuthManager(UserManager<User> userManager, IConfiguration configura
         return new SigningCredentials(secret, SecurityAlgorithms.HmacSha256);
     }
 
-    private async Task<List<Claim>> GetClaims()
+    private async Task<List<Claim>> GetClaims(User user)
     {
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, _user.Id.ToString()),
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new(JwtRegisteredClaimNames.Sub, _user.Email),
-            new(ClaimTypes.Name, _user.UserName),
-            new(ClaimTypes.GivenName, _user.FirstName),
-            new(ClaimTypes.Surname, _user.LastName),
-            new(ClaimTypes.Email, _user.Email)
+            new(JwtRegisteredClaimNames.Sub, user.Email),
+            new(ClaimTypes.Name, user.UserName),
+            new(ClaimTypes.GivenName, user.FirstName),
+            new(ClaimTypes.Surname, user.LastName),
+            new(ClaimTypes.Email, user.Email)
         };
-        var roles = await _userManager.GetRolesAsync(_user);
+        var roles = await _userManager.GetRolesAsync(user);
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
@@ -60,14 +59,12 @@ public class AuthManager(UserManager<User> userManager, IConfiguration configura
     private JwtSecurityToken GenerateTokenOption(SigningCredentials signingCredentials, List<Claim> claims)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
-        var expiration = DateTimeOffset.Now.AddHours(
-            Convert.ToDouble(jwtSettings.GetSection("JwtLifetime").Value));
 
         var token = new JwtSecurityToken(
             issuer: jwtSettings.GetSection("JwtValidIssuer").Value,
             audience: jwtSettings.GetSection("JwtValidAudience").Value,
             claims: claims,
-            expires: expiration.UtcDateTime,
+            expires: AccessTokenExpiration().UtcDateTime,
             signingCredentials: signingCredentials
             );
         return token;
@@ -75,8 +72,8 @@ public class AuthManager(UserManager<User> userManager, IConfiguration configura
 
     public async Task<bool> ValidateUser(LoginUserDTO userDTO)
     {
-        _user = await _userManager.FindByNameAsync(userDTO.Email) ?? throw new Exception("User not found");
-        return (_user != null && await _userManager.CheckPasswordAsync(_user, userDTO.Password));
+        User user = await _userManager.FindByNameAsync(userDTO.Email) ?? throw new Exception("User not found");
+        return (user != null && await _userManager.CheckPasswordAsync(user, userDTO.Password));
     }
 
     public string GenerateRefreshToken()
@@ -111,17 +108,23 @@ public class AuthManager(UserManager<User> userManager, IConfiguration configura
 
     public async Task<string> GetUserRoleById(string userId)
     {
-        _user = await _userManager.FindByIdAsync(userId) ?? throw new Exception("User not found");
-        return _userManager.GetRolesAsync(_user).Result.FirstOrDefault() ?? throw new Exception("Role not found");
+        User user = await _userManager.FindByIdAsync(userId) ?? throw new Exception("User not found");
+        return _userManager.GetRolesAsync(user).Result.FirstOrDefault() ?? throw new Exception("Role not found");
     }
 
-    public async Task<UserDTO> GetCurrentUser(ClaimsPrincipal claimsPrincipal)
+    public DateTimeOffset AccessTokenExpiration()
     {
-        _user = await _userManager.GetUserAsync(claimsPrincipal) ?? throw new Exception("User not found");
+        //return DateTimeOffset.Now.AddHours(
+        //    Convert.ToDouble(_configuration["JwtSettings:JwtLifetime"]));
+        return DateTimeOffset.UtcNow.AddMinutes(
+            Convert.ToDouble(_configuration["JwtSettings:JwtLifetime"]));
+    }
 
-        return new UserDTO
-        {
-            Id = _user.Id
-        };
+    public DateTimeOffset RefreshTokenExpiration()
+    {
+        //return DateTimeOffset.Now.AddDays(
+        //    Convert.ToDouble(_configuration["JwtSettings:RefreshTokenLifetime"]));
+        return DateTimeOffset.UtcNow.AddHours(
+            Convert.ToDouble(_configuration["JwtSettings:JwtRefreshTokenLifetime"]));
     }
 }

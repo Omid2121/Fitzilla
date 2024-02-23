@@ -23,12 +23,17 @@ public class AccountsController(IMapper mapper, UserManager<User> userManager, I
     private readonly IConfiguration _configuration = configuration;
 
     [AllowAnonymous]
-    [HttpPost]
-    [Route("register")]
+    [HttpPost("register")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Register([FromBody] CreateUserDTO userDTO)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        if (userDTO.DateOfBirth < DateTime.Now.AddYears(-120) || userDTO.DateOfBirth > DateTime.Now.AddYears(-12))
+        {
+            return BadRequest("Invalid date of birth");
+        }
 
         var user = _mapper.Map<User>(userDTO);
         user.UserName = userDTO.Email;
@@ -48,24 +53,30 @@ public class AccountsController(IMapper mapper, UserManager<User> userManager, I
     }
 
     [AllowAnonymous]
-    [HttpPost]
-    [Route("login")]
+    [HttpPost("login")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Login([FromBody] LoginUserDTO userDTO)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        if (!await _authManager.ValidateUser(userDTO)) return Unauthorized();
+        var user = await _userManager.FindByEmailAsync(userDTO.Email);
 
-        var accessTokenExpiration = DateTimeOffset.Now.AddHours(Convert.ToDouble(_configuration.GetSection("JwtSettings:JwtLifetime").Value));
-        var refreshTokenExpiration = DateTimeOffset.Now.AddDays(Convert.ToDouble(_configuration.GetSection("JwtSettings:JwtRefreshTokenLifetime").Value));
+        if (user == null || !await _authManager.ValidateUser(userDTO)) return Unauthorized();
 
+        var refreshToken = _authManager.GenerateRefreshToken();
+
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiry = _authManager.RefreshTokenExpiration();
+        await _userManager.UpdateAsync(user);
+        
         return Accepted(new AuthResponse
         {
-            AccessToken = await _authManager.CreateAccessToken(),
-            AccessTokenExpiry = accessTokenExpiration,
-            RefreshToken = _authManager.GenerateRefreshToken(),
-            RefreshTokenExpiry = refreshTokenExpiration
+            AccessToken = await _authManager.CreateAccessToken(user),
+            AccessTokenExpiry = _authManager.AccessTokenExpiration(),
+            RefreshToken = refreshToken,
+            RefreshTokenExpiry = _authManager.RefreshTokenExpiration(),
         });
     }
 
@@ -79,18 +90,16 @@ public class AccountsController(IMapper mapper, UserManager<User> userManager, I
         if (principal?.Identity?.Name == null) return Unauthorized();
 
         var user = await _userManager.FindByEmailAsync(principal.Identity.Name);
-        if (user == null || user.RefreshToken != tokenRequest.RefreshToken || user.RefreshTokenExpiry < DateTimeOffset.Now)
-            return Unauthorized();
 
-        var accessTokenExpiration = DateTimeOffset.Now.AddHours(Convert.ToDouble(_configuration.GetSection("JwtSettings:JwtLifetime").Value));
-        var refreshTokenExpiration = DateTimeOffset.Now.AddDays(Convert.ToDouble(_configuration.GetSection("JwtSettings:JwtRefreshTokenLifetime").Value));
+        if (user == null || user.RefreshToken != tokenRequest.RefreshToken || user.RefreshTokenExpiry < DateTimeOffset.UtcNow)
+            return Unauthorized();
 
         return Accepted(new AuthResponse
         {
-            AccessToken = await _authManager.CreateAccessToken(),
-            AccessTokenExpiry = accessTokenExpiration,
+            AccessToken = await _authManager.CreateAccessToken(user),
+            AccessTokenExpiry = _authManager.AccessTokenExpiration(),
             RefreshToken = user.RefreshToken,
-            RefreshTokenExpiry = refreshTokenExpiration
+            RefreshTokenExpiry = _authManager.RefreshTokenExpiration()
         });
     }
 

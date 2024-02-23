@@ -12,6 +12,7 @@ public class User : IdentityUser
 
     /// <summary>
     /// User's last name
+    /// </summary>
     public string LastName { get; set; }
 
     /// <summary>

@@ -1,10 +1,7 @@
 using AspNetCoreRateLimit;
 using Azure.Storage.Blobs;
 using Fitzilla.BLL;
-using Fitzilla.BLL.Services;
 using Fitzilla.DAL;
-using Fitzilla.DAL.IRepository;
-using Fitzilla.DAL.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
@@ -24,33 +21,20 @@ public class Program
         builder.Services.ConfigureRateLimiting();
         builder.Services.AddHttpContextAccessor();
 
-        builder.Services.ConfigureHttpCacheHeaders();
+        //TODO: fix header cache.
+        //builder.Services.ConfigureHttpCacheHeaders();
 
         builder.Services.AddAuthentication();
         builder.Services.AddAuthorization();
         builder.Services.ConfigureIdentity();
         builder.Services.ConfigureJWT(builder.Configuration);
-
-        builder.Services.AddCors(options =>
-        {
-            options.AddPolicy("AllowEverything", builder =>
-            builder.AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader());
-        });
-
-        builder.Services.ConfigureAutoMapper();
+        
+        builder.Services.ConfigureCors();
 
         builder.Services.AddSingleton(x => new BlobServiceClient(builder.Configuration.GetConnectionString("AzureBlobStorageConnection")));
 
-        builder.Services.AddScoped<IBlobRepository, BlobRepository>();
-
-        builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
-        builder.Services.AddScoped<IAuthManager, AuthManager>();
-        builder.Services.AddScoped<ExerciseManager>();
-        builder.Services.AddScoped<MacroManager>();
-        builder.Services.AddScoped<PlanManager>();
-        builder.Services.AddScoped<SessionManager>();
+        builder.Services.ConfigureDependencies();
+        builder.Services.ConfigureAutoMapper();
 
         AddSwaggerDoc(builder.Services);
 
@@ -115,13 +99,14 @@ public class Program
 
         app.ConfigureExceptionHandler();
 
-        app.UseCors("AllowEverything");
+        app.UseCors("CorsPolicy");
         app.UseRouting();
 
-        app.UseResponseCaching();
-        app.UseHttpCacheHeaders();
-        app.UseIpRateLimiting();
+        //TODO: fix header cache
+        //app.UseResponseCaching();
+        //app.UseHttpCacheHeaders();
 
+        app.UseIpRateLimiting();
 
         app.UseHttpsRedirection();
 

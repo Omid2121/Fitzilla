@@ -23,7 +23,7 @@ public class ExerciseTemplate : EntityDetail
     /// <summary>
     /// List of targeted muscles for the exercise.
     /// </summary>
-    public virtual ICollection<TargetMuscle> TargetMuscles { get; set; }
+    public virtual IList<TargetMuscle> TargetMuscles { get; set; }
 
     /// <summary>
     /// The relationship between the exercise and the media.
