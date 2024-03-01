@@ -130,40 +130,49 @@ public class ExercisesController(IUnitOfWork unitOfWork, IMapper mapper, IBlobRe
         }
     }
 
-    //TODO: It should be able to update exercise and its records.
-    //[HttpPut("{exerciseId}")]
-    //[ProducesResponseType(StatusCodes.Status204NoContent)]
-    //[ProducesResponseType(StatusCodes.Status403Forbidden)]
-    //[ProducesResponseType(StatusCodes.Status400BadRequest)]
-    //public async Task<IActionResult> UpdateExercise(Guid exerciseId, [FromBody] UpdateExerciseDTO exerciseDTO)
-    //{
-    //    if (!ModelState.IsValid || exerciseId == Guid.Empty) return BadRequest($"Invalid payload: {ModelState}");
+    [HttpPost("bulk")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateExercises([FromBody] List<CreateExerciseDTO> exerciseDTOs)
+    {
+        if (!ModelState.IsValid) return BadRequest($"Invalid payload: {ModelState}");
 
-    //    if (exerciseDTO.ExerciseRecords.Count == 0 || exerciseDTO.ExerciseRecords.Count != exerciseDTO.Set)
-    //        return BadRequest("ExerciseRecords must be provided and equal to Set.");
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (exerciseDTOs.Any(e => e.CreatorId != currentUserId))
+            return Forbid("You are not authorized to create this exercise.");
 
-    //    var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(exerciseId), includes: ["ExerciseRecords"]);
-    //    if (exercise == null) return NotFound($"Exercise with id {exerciseId} not found.");
+        using var transaction = _unitOfWork.BeginTransaction();
+        try
+        {
+            foreach (var exerciseDTO in exerciseDTOs)
+            {
+                if (exerciseDTO.ExerciseRecords.Count == 0 || exerciseDTO.ExerciseRecords.Count != exerciseDTO.Set)
+                    return BadRequest("ExerciseRecords must be provided and equal to Set.");
 
-    //    _mapper.Map(exerciseDTO, exercise);
-    //    exercise.ModifiedAt = DateTimeOffset.Now;
-    //    exercise.ExerciseRecords.Select(er => er.OneRepMax = _exerciseManager.CalculateOneRepMax(er.Weight, er.Rep)).ToList();
+                var exercise = _mapper.Map<Exercise>(exerciseDTO);
+                exercise.CreatedAt = DateTimeOffset.Now;
 
-    //    var userRoles = User.FindAll(ClaimTypes.Role);
-    //    if (userRoles.Any(ur => ur.Value == Role.Admin))
-    //    {
-    //        _unitOfWork.Exercises.Update(exercise);
-    //    }
-    //    else
-    //    {
-    //        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-    //        if (exercise.CreatorId != currentUserId) return Forbid("You are not authorized to update this exercise.");
-    //        _unitOfWork.Exercises.Update(exercise);
-    //    }
-    //    await _unitOfWork.Save();
+                await _unitOfWork.Exercises.Insert(exercise);
+                await _unitOfWork.Save();
 
-    //    return NoContent();
-    //}
+                var records = _mapper.Map<IList<ExerciseRecord>>(exerciseDTO.ExerciseRecords);
+                records.Select(r => r.OneRepMax = _exerciseManager.CalculateOneRepMax(r.Weight, r.Rep)).ToList();
+                records.Select(r => r.ExerciseId = exercise.Id).ToList();
+                await _unitOfWork.ExerciseRecords.InsertRange(records);
+                await _unitOfWork.Save();
+            }
+
+            transaction.Commit();
+            return Ok("Exercises and records have been created successfully.");
+        }
+        catch (Exception)
+        {
+            transaction.Rollback();
+            return StatusCode(500, "An error occurred while creating exercises and records");
+        }
+    }
+
 
     [HttpPut("{exerciseId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -176,30 +185,42 @@ public class ExercisesController(IUnitOfWork unitOfWork, IMapper mapper, IBlobRe
         if (exerciseDTO.ExerciseRecords.Count == 0 || exerciseDTO.ExerciseRecords.Count != exerciseDTO.Set)
             return BadRequest("ExerciseRecords must be provided and equal to Set.");
 
-        var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(exerciseId), includes: ["ExerciseRecords"]);
-        if (exercise == null) return NotFound($"Exercise with id {exerciseId} not found.");
-
-        _mapper.Map(exerciseDTO, exercise);
-        exercise.ModifiedAt = DateTimeOffset.Now;
-
-        exercise.ExerciseRecords.Clear();
-        var records = _mapper.Map<IList<ExerciseRecord>>(exerciseDTO.ExerciseRecords);
-        records.Select(r => r.OneRepMax = _exerciseManager.CalculateOneRepMax(r.Weight, r.Rep)).ToList();
-        records.Select(r => r.ExerciseId = exercise.Id).ToList();
-        await _unitOfWork.ExerciseRecords.InsertRange(records);
-        
         var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(ur => ur.Value == Role.Admin))
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && exerciseDTO.CreatorId != currentUserId) return Forbid("You are not authorized to update this exercise.");
+
+        using var transaction = _unitOfWork.BeginTransaction();
+        try
         {
+            var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(exerciseId), includes: ["ExerciseRecords"]);
+            if (exercise == null) return NotFound($"Exercise with id {exerciseId} not found.");
+
+            _mapper.Map(exerciseDTO, exercise);
+            exercise.ModifiedAt = DateTimeOffset.Now;
             _unitOfWork.Exercises.Update(exercise);
+            if (exerciseDTO.ExerciseRecords.Count == 0)
+            {
+                transaction.Commit();
+                return NoContent();
+            }
+            //exercise.ExerciseRecords.Clear();
+
+            var records = _mapper.Map<IList<ExerciseRecord>>(exerciseDTO.ExerciseRecords);
+            records.Select(r => r.OneRepMax = _exerciseManager.CalculateOneRepMax(r.Weight, r.Rep)).ToList();
+            records.Select(r => r.ExerciseId = exercise.Id).ToList();
+            await _unitOfWork.ExerciseRecords.InsertRange(records);
+
+            _unitOfWork.Exercises.Update(exercise);
+            await _unitOfWork.Save();
+
+            transaction.Commit();
         }
-        else
+        catch (Exception)
         {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (exercise.CreatorId != currentUserId) return Forbid("You are not authorized to update this exercise.");
-            _unitOfWork.Exercises.Update(exercise);
+            transaction.Rollback();
+            return StatusCode(500, "An error occurred while updating exercise and records");
         }
-        await _unitOfWork.Save();
 
         return NoContent();
     }
@@ -247,20 +268,16 @@ public class ExercisesController(IUnitOfWork unitOfWork, IMapper mapper, IBlobRe
 
         var exercise = await _unitOfWork.Exercises.Get(e => e.Id.Equals(exerciseId));
         if (exercise == null) return NotFound($"Exercise with id {exerciseId} not found.");
+        
+        var userRoles = User.FindAll(ClaimTypes.Role);
+        bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!isAdmin && exercise.CreatorId != currentUserId) return Forbid("You are not authorized to update this exercise's records");
 
         var exerciseRecords = _mapper.Map<IEnumerable<ExerciseRecord>>(exerciseRecordsDTO);
 
-        var userRoles = User.FindAll(ClaimTypes.Role);
-        if (userRoles.Any(ur => ur.Value == Role.Admin))
-        {
-            _unitOfWork.ExerciseRecords.UpdateRange(exerciseRecords);
-        }
-        else
-        {
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (exercise.CreatorId != currentUserId) return Forbid("You are not authorized to update this exercise.");
-            _unitOfWork.ExerciseRecords.UpdateRange(exerciseRecords);
-        }
+        _unitOfWork.ExerciseRecords.UpdateRange(exerciseRecords);
+
         await _unitOfWork.Save();
 
         return NoContent();

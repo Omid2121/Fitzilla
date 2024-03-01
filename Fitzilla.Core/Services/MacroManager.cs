@@ -7,6 +7,20 @@ namespace Fitzilla.BLL.Services;
 
 public class MacroManager()
 {
+    public bool IsGoalTypeAlinesGoalWeight(GoalType goalType, double goalWeight, double currentWeight)
+    {
+        return goalType switch
+        {
+            GoalType.MildWeightLoss => goalWeight < currentWeight,
+            GoalType.WeightLoss => goalWeight < currentWeight,
+            GoalType.ExtremeWeightLoss => goalWeight < currentWeight,
+            GoalType.MildWeightGain => goalWeight > currentWeight,
+            GoalType.WeightGain => goalWeight > currentWeight,
+            GoalType.ExtremeWeightGain => goalWeight > currentWeight,
+            GoalType.Maintenance => goalWeight == currentWeight,
+            _ => throw new Exception("Invalid goal type."),
+        };
+    }
 
     public Macro CalculateMacroCycleLength(Macro macro, double currentWeight)
     {
@@ -16,7 +30,7 @@ public class MacroManager()
         if (currentWeight <= 0)
             throw new Exception("Current weight must be greater than zero.");
 
-        if (macro.CycleStartDate < DateTimeOffset.Now)
+        if (macro.CycleStartDate.Date < DateTimeOffset.Now.Date)
             throw new Exception("Cycle start date cannot be in the past.");
 
         var weightDifference = Math.Abs(macro.GoalWeight - currentWeight);
@@ -56,12 +70,16 @@ public class MacroManager()
         if (!IsValidMacroPercentage(macro))
             throw new Exception("Macro percentages should add up to 100%");
 
+        const int proteinCaloriesPerGram = 4;
+        const int carbCaloriesPerGram = 4;
+        const int fatCaloriesPerGram = 9;
+
         // 1 gram of protein = 4 calories
-        macro.ProteinAmount = macro.Calorie * (macro.ProteinPercentage / 100) / 4;
+        macro.ProteinAmount = macro.Calorie * ((double)macro.ProteinPercentage / 100.0) / proteinCaloriesPerGram;
         // 1 gram of carbs = 4 calories
-        macro.CarbohydrateAmount = macro.Calorie * (macro.CarbohydratePercentage / 100) / 4;
+        macro.CarbohydrateAmount = macro.Calorie * ((double)macro.CarbohydratePercentage / 100.0) / carbCaloriesPerGram;
         // 1 gram of fat = 9 calories
-        macro.FatAmount = macro.Calorie * (macro.FatPercentage / 100) / 9;
+        macro.FatAmount = macro.Calorie * ((double)macro.FatPercentage / 100.0) / fatCaloriesPerGram;
 
         return macro;
     }

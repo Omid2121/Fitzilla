@@ -1,4 +1,5 @@
-﻿using Azure.Storage.Blobs;
+﻿using Azure;
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Fitzilla.DAL.IRepository;
 using Fitzilla.DAL.Models;
@@ -24,6 +25,27 @@ namespace Fitzilla.DAL.Repository
             var blobClient = _client.GetBlobClient(fileName);
             await blobClient.DeleteIfExistsAsync();
         }
+
+        public async Task<BlobObject?> DownloadAsync(string path)
+        {
+            var filename = new Uri(path).Segments.LastOrDefault() ?? string.Empty;
+            BlobClient file = _client.GetBlobClient(filename);
+
+            if (await file.ExistsAsync())
+            {
+                var blobContent = await file.OpenReadAsync();
+
+                var content = await file.DownloadContentAsync();
+
+                string name = filename;
+                string contetntType = content.Value.Details.ContentType;
+
+                return new BlobObject { Content = blobContent, Name = name, ContentType = contetntType };
+            }
+
+            return null;
+        }
+
         public async Task<BlobObject> GetBlobFile(string path)
         {
             var fileName = new Uri(path).Segments.LastOrDefault() ?? string.Empty;
@@ -48,6 +70,7 @@ namespace Fitzilla.DAL.Repository
                     {
                         return new BlobObject
                         {
+                            Name = fileName,
                             Content = downloadedData,
                             ContentType = content.Details.ContentType,
                         };
@@ -121,6 +144,25 @@ namespace Fitzilla.DAL.Repository
             }
 
             return blobs;
+        }
+
+        public async Task<BlobResponse> UploadBlobAsync(IFormFile file)
+        {
+            var blobClient = _client.GetBlobClient(file.FileName);
+
+            await using (Stream? data = file.OpenReadStream())
+            {
+                await blobClient.UploadAsync(data);
+            }
+            BlobResponse response = new()
+            {
+                Status = $"File {file.FileName} uploaded successfully.",
+                Error = false,
+            };
+            response.BlobObject.Uri = blobClient.Uri.AbsoluteUri;
+            response.BlobObject.Name = blobClient.Name;
+
+            return response;
         }
 
         public async Task<string> UploadBlobFile(IFormFile file)

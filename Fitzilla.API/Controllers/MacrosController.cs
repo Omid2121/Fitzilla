@@ -101,8 +101,12 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
         var currentUser = await _userManager.GetUserAsync(User);
         if (currentUser == null) return BadRequest("User not found.");
 
-        //var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (macro.CreatorId != currentUser.Id) return Forbid("You are not authorized to create this macro.");
+
+        if (macro.GoalWeight < 0 || macro.GoalWeight > 1000) return BadRequest("Invalid goal weight.");
+
+        if (!_macroManager.IsGoalTypeAlinesGoalWeight(macro.GoalType, macro.GoalWeight, currentUser.Weight))
+            return BadRequest("Goal type and goal weight do not align.");
 
         macro = _macroManager.CalculateMacro(macro, currentUser);
         if (macro is null) return BadRequest("Invalid payload.");
@@ -113,7 +117,9 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
         await _unitOfWork.Macros.Insert(macro);
         await _unitOfWork.Save();
 
-        return CreatedAtRoute("GetMacroById", new { macroId = macro.Id }, macro);
+        var result = _mapper.Map<MacroDTO>(macro);
+
+        return CreatedAtRoute("GetMacroById", new { macroId = result.Id }, result);
     }
 
     [HttpPut("{macroId}")]
@@ -128,6 +134,11 @@ public class MacrosController(IUnitOfWork unitOfWork, IMapper mapper, MacroManag
         var userRoles = User.FindAll(ClaimTypes.Role);
         bool isAdmin = userRoles.Any(ur => ur.Value == Role.Admin);
         if (!isAdmin && macroDTO.CreatorId != currentUser.Id) return Forbid("You are not authorized to update this macro.");
+
+        if (macroDTO.GoalWeight < 0 || macroDTO.GoalWeight > 1000) return BadRequest("Invalid goal weight.");
+
+        if (!_macroManager.IsGoalTypeAlinesGoalWeight(macroDTO.GoalType, macroDTO.GoalWeight, currentUser.Weight))
+            return BadRequest("Goal type and goal weight do not align.");
 
         var macro = await _unitOfWork.Macros.Get(m => m.Id.Equals(macroId));
         if (macro is null) return NotFound($"Exercise with id {macroId} not found.");
